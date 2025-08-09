@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import veo_tools as veo
+import veotools as veo
 
 def generate_single_video(prompt: str, model: str | None = None):
     veo.init()

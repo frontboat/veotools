@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Optional, List, Dict
 import time
 from mcp.server.fastmcp import FastMCP, Context
-import veo_tools as veo
-from veo_tools.mcp_api import JobStore
-from veo_tools.process.extractor import get_video_info
+import veotools as veo
+from veotools.mcp_api import JobStore
+from veotools.process.extractor import get_video_info
 
 app = FastMCP("veo-tools")
 

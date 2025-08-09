@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import veo_tools as veo
+import veotools as veo
 
 
 def continue_my_video(video_path: str, continuation_prompt: str, model: str | None = None):

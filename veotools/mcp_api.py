@@ -181,7 +181,7 @@ def preflight() -> Dict[str, Any]:
 def version() -> Dict[str, Any]:
     """Report package and dependency versions in a JSON-friendly format."""
     from importlib.metadata import PackageNotFoundError, version as pkg_version
-    import veo_tools as veo
+    import veotools as veo
 
     def safe_ver(name: str) -> Optional[str]:
         try:
@@ -200,7 +200,7 @@ def version() -> Dict[str, Any]:
         ffmpeg_info = None
 
     return {
-        "veo_tools": getattr(veo, "__version__", None),
+        "veotools": getattr(veo, "__version__", None),
         "dependencies": {
             "google-genai": safe_ver("google-genai"),
             "opencv-python": safe_ver("opencv-python"),

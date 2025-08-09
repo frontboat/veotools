@@ -115,7 +115,7 @@ veo.preflight()
 # -> { ok: bool, gemini_api_key: bool, ffmpeg: {installed, version}, write_permissions: bool, base_path: str }
 
 veo.version()
-# -> { veo_tools: str | None, dependencies: {...}, ffmpeg: str | None }
+# -> { veotools: str | None, dependencies: {...}, ffmpeg: str | None }
 ```
 
 ### Non-blocking generation jobs

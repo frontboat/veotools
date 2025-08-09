@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import veo_tools as veo
+import veotools as veo
 
 def example_1_simple_chain():
     print("Example 1: Simple Chain")
