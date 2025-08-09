@@ -61,6 +61,26 @@ final = veo.stitch_videos(
 )
 ```
 
+## CLI
+
+Install exposes the `veo` command. Use `-h/--help` on any subcommand.
+
+```bash
+# Basics
+veo preflight
+veo list-models --remote
+
+# Generate from text
+veo generate --prompt "cat riding a hat" --model veo-3.0-fast-generate-preview
+
+# Continue a video and stitch seamlessly
+veo continue --video dog.mp4 --prompt "the dog finds a treasure chest" --overlap 1.0
+
+# Help
+veo --help
+veo generate --help
+```
+
 ### Create a Story with Bridge
 
 ```python

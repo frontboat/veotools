@@ -34,8 +34,8 @@ class StorageManager:
 
         Default resolution order for base path:
         1. VEO_OUTPUT_DIR environment variable (if set)
-        2. Project root alongside the package (../output)
-        3. Current working directory (./output) as a safe fallback
+        2. Current working directory (./output)
+        3. Package-adjacent directory (../output) as a last resort
         """
         resolved_base: Path
 
@@ -46,15 +46,21 @@ class StorageManager:
         elif env_base:
             resolved_base = Path(env_base)
         else:
-            # 2) Attempt to place under project root (parent of the package dir)
+            # 2) Prefer CWD/output for installed packages (CLI/scripts)
+            cwd_candidate = Path.cwd() / "output"
             try:
-                package_root = Path(__file__).resolve().parents[2]
-                candidate = package_root / "output"
-                candidate.mkdir(parents=True, exist_ok=True)
-                resolved_base = candidate
+                cwd_candidate.mkdir(parents=True, exist_ok=True)
+                resolved_base = cwd_candidate
             except Exception:
-                # 3) Fallback to CWD/output
-                resolved_base = Path.cwd() / "output"
+                # 3) As a last resort, place beside the installed package
+                try:
+                    package_root = Path(__file__).resolve().parents[2]
+                    candidate = package_root / "output"
+                    candidate.mkdir(parents=True, exist_ok=True)
+                    resolved_base = candidate
+                except Exception:
+                    # Final fallback: user home
+                    resolved_base = Path.home() / "output"
 
         self.base_path = resolved_base
         self.base_path.mkdir(parents=True, exist_ok=True)
