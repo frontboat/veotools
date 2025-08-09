@@ -25,14 +25,6 @@ export GEMINI_API_KEY="your-api-key"
 # GEMINI_API_KEY=your-api-key
 ```
 
-## Publishing (maintainers)
-
-```bash
-pip install build twine
-python -m build
-twine upload dist/*
-```
-
 ## SDK quick start
 
 ### Simple Video Generation
@@ -192,28 +184,20 @@ See the `examples/` folder for complete examples:
 
 ```
 .
-├── examples
-│   ├── all_functions.py
-│   ├── chained_workflow.py
-│   ├── text_to_video.py
-│   └── video_to_video.py
-├── readme.md
-├── requirements.txt
-└── veo_tools
+├── __init__.py
+├── bridge.py
+├── core.py
+├── generate
+│   ├── __init__.py
+│   └── video.py
+├── mcp_api.py
+├── models.py
+├── process
+│   ├── __init__.py
+│   └── extractor.py
+└── stitch
     ├── __init__.py
-    ├── bridge.py
-    ├── core.py
-    ├── generate
-    │   ├── __init__.py
-    │   └── video.py
-    ├── models.py
-    ├── process
-    │   ├── __init__.py
-    │   └── extractor.py
-    └── stitch
-        ├── __init__.py
-        └── seamless.py
-    └── mcp_api.py
+    └── seamless.py
 ```
 
 ## Key Concepts
@@ -241,20 +225,13 @@ Organized file management (local now, cloud-ready for future).
 - Generation usually takes 1–3 minutes
 - Veo access may require allowlist
 
-## Publishing (maintainers)
-```bash
-pip install build twine
-python -m build
-twine upload dist/*
-```
-
 ## License
 
 MIT
 
 ## Contributing
 
-Pull requests welcome! Please read CONTRIBUTING.md first.
+Pull requests welcome!
 
 ## Support
 
