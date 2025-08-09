@@ -21,18 +21,10 @@ def demo_generate_from_text():
     print("DEMO: generate_from_text")
     print("="*60)
     
-    print("\nSelect Veo model:")
-    print("1. veo-3.0-fast-generate-preview (Lower quota usage, 8s videos)")
-    print("2. veo-3.0-generate-preview (Medium quota usage, 8s videos)")
-    print("3. veo-2.0-generate-001 (Higher quota usage, 5s videos, more control)")
-    
-    choice = input("\nSelect model (1-3, default=1): ").strip() or "1"
-    models = {
-        "1": "veo-3.0-fast-generate-preview",
-        "2": "veo-3.0-generate-preview",
-        "3": "veo-2.0-generate-001"
-    }
-    model = models.get(choice, "veo-3.0-fast-generate-preview")
+    # Discover models instead of hard-coding
+    remote = veo.list_models(include_remote=True)["models"]
+    veo_models = [m for m in remote if m["id"].startswith("veo-")]
+    model = next((m["id"] for m in veo_models if "fast" in m["id"]), "veo-3.0-fast-generate-preview")
     
     print(f"\nUsing model: {model}")
     
@@ -72,18 +64,9 @@ def demo_generate_from_image():
         image_path = veo.extract_frame(videos[0], time_offset=1.0)
         print(f"Using extracted frame: {image_path}")
     
-    print("\nSelect Veo model:")
-    print("1. veo-3.0-fast-generate-preview (Lower quota usage, 8s videos)")
-    print("2. veo-3.0-generate-preview (Medium quota usage, 8s videos)")
-    print("3. veo-2.0-generate-001 (Higher quota usage, 5s videos, more control)")
-    
-    choice = input("\nSelect model (1-3, default=1): ").strip() or "1"
-    models = {
-        "1": "veo-3.0-fast-generate-preview",
-        "2": "veo-3.0-generate-preview",
-        "3": "veo-2.0-generate-001"
-    }
-    model = models.get(choice, "veo-3.0-fast-generate-preview")
+    remote = veo.list_models(include_remote=True)["models"]
+    veo_models = [m for m in remote if m["id"].startswith("veo-")]
+    model = next((m["id"] for m in veo_models if "fast" in m["id"]), "veo-3.0-fast-generate-preview")
     
     print(f"\nUsing model: {model}")
     
@@ -112,18 +95,9 @@ def demo_generate_from_video():
     source_video = videos[0]
     print(f"Continuing from: {source_video.name}")
     
-    print("\nSelect Veo model:")
-    print("1. veo-3.0-fast-generate-preview (Lower quota usage, 8s videos)")
-    print("2. veo-3.0-generate-preview (Medium quota usage, 8s videos)")
-    print("3. veo-2.0-generate-001 (Higher quota usage, 5s videos, more control)")
-    
-    choice = input("\nSelect model (1-3, default=1): ").strip() or "1"
-    models = {
-        "1": "veo-3.0-fast-generate-preview",
-        "2": "veo-3.0-generate-preview",
-        "3": "veo-2.0-generate-001"
-    }
-    model = models.get(choice, "veo-3.0-fast-generate-preview")
+    remote = veo.list_models(include_remote=True)["models"]
+    veo_models = [m for m in remote if m["id"].startswith("veo-")]
+    model = next((m["id"] for m in veo_models if "fast" in m["id"]), "veo-3.0-fast-generate-preview")
     
     print(f"\nUsing model: {model}")
     

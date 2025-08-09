@@ -9,7 +9,7 @@ from google.genai import types
 
 from ..core import VeoClient, StorageManager, ProgressTracker, ModelConfig
 from ..models import VideoResult, VideoMetadata
-from ..process.extractor import extract_frame
+from ..process.extractor import extract_frame, get_video_info
 
 
 def generate_from_text(
@@ -74,10 +74,20 @@ def generate_from_text(
             result.path = video_path
             result.url = storage.get_url(video_path)
             
-            result.metadata = VideoMetadata(
-                fps=24.0,
-                duration=model_info["default_duration"]
-            )
+            # Probe actual metadata from downloaded file
+            try:
+                info = get_video_info(video_path)
+                result.metadata = VideoMetadata(
+                    fps=float(info.get("fps", 24.0)),
+                    duration=float(info.get("duration", model_info["default_duration"])),
+                    width=int(info.get("width", 0)),
+                    height=int(info.get("height", 0)),
+                )
+            except Exception:
+                result.metadata = VideoMetadata(
+                    fps=24.0,
+                    duration=model_info["default_duration"]
+                )
             
             progress.complete("Complete")
             result.update_progress("Complete", 100)
@@ -152,10 +162,20 @@ def generate_from_image(
             
             result.path = video_path
             result.url = storage.get_url(video_path)
-            result.metadata = VideoMetadata(
-                fps=24.0,
-                duration=model_info["default_duration"]
-            )
+            # Probe actual metadata from downloaded file
+            try:
+                info = get_video_info(video_path)
+                result.metadata = VideoMetadata(
+                    fps=float(info.get("fps", 24.0)),
+                    duration=float(info.get("duration", model_info["default_duration"])),
+                    width=int(info.get("width", 0)),
+                    height=int(info.get("height", 0)),
+                )
+            except Exception:
+                result.metadata = VideoMetadata(
+                    fps=24.0,
+                    duration=model_info["default_duration"]
+                )
             
             progress.complete("Complete")
             result.update_progress("Complete", 100)

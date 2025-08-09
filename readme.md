@@ -1,21 +1,23 @@
-# Veo Tools SDK
+# Veotools
 
-A Python toolkit for AI-powered video generation and seamless stitching using Google's Veo models.
+Concise Python SDK and MCP server for generating and extending videos with Google Veo.
 
 ## Features
+- Video generation from text, image seed, or continuation from an existing video
+- Seamless extension workflow (extract last-second frame → generate → stitch with trim)
+- MCP tools with progress streaming (start/get/cancel, continue_video) and recent videos resource
+- Model discovery (local registry + remote list, cached)
+- Accurate metadata via ffprobe/OpenCV; outputs under project `output/` (override with `VEO_OUTPUT_DIR`)
 
-- 🎬 **Video Generation** - Generate videos from text, images, or existing videos
-- 🔗 **Seamless Stitching** - Automatically stitch videos with smart overlap trimming  
-- 🎨 **Video Continuation** - Continue any video with AI from its last frame
-- 🌉 **Bridge Workflows** - Chain operations together in fluent workflows
-- 📊 **Web-Ready** - JSON-serializable results for API integration
-- 🔄 **Progress Tracking** - Real-time progress callbacks for long operations
-
-## Installation
+## Install
 
 ```bash
-# Install dependencies
-pip install google-genai opencv-python numpy python-dotenv
+pip install veotools
+
+# Or install from source
+pip install -e .
+
+pip install "veotools[mcp]"  # optional MCP CLI
 
 # Set your API key
 export GEMINI_API_KEY="your-api-key"
@@ -23,12 +25,20 @@ export GEMINI_API_KEY="your-api-key"
 # GEMINI_API_KEY=your-api-key
 ```
 
-## Quick Start
+## Publishing (maintainers)
+
+```bash
+pip install build twine
+python -m build
+twine upload dist/*
+```
+
+## SDK quick start
 
 ### Simple Video Generation
 
 ```python
-import veo_tools as veo
+import veotools as veo
 
 # Initialize
 veo.init()
@@ -42,7 +52,7 @@ result = veo.generate_from_text(
 print(f"Generated: {result.path}")
 ```
 
-### Continue Your Video
+### Continue and stitch
 
 ```python
 # Continue from an existing video (like one from your phone)
@@ -75,7 +85,7 @@ final_video = (bridge
 )
 ```
 
-## Core Functions
+## Core functions
 
 ### Generation
 
@@ -100,26 +110,47 @@ final_video = (bridge
 - `VideoResult` - Web-ready result objects
 - `ProgressTracker` - Progress callback handling
 
-## Models
+## MCP tools
 
-### Veo 3.0 Fast (Preview)
-- **Model**: `veo-3.0-fast-generate-preview`
-- **Speed**: ~1 minute
-- **Audio**: Yes (native)
-- **Duration**: 8 seconds
+These functions are designed for integration with MCP servers and return deterministic JSON-friendly dicts.
 
-### Veo 3.0 (Preview)  
-- **Model**: `veo-3.0-generate-preview`
-- **Speed**: ~2 minutes
-- **Audio**: Yes (native)
-- **Duration**: 8 seconds
+### System
 
-### Veo 2.0
-- **Model**: `veo-2.0-generate-001`
-- **Speed**: ~3 minutes
-- **Audio**: No
-- **Duration**: 3-10 seconds (configurable)
-- **Extra**: Supports `enhance_prompt`, `fps` parameters
+```python
+import veotools as veo
+
+veo.preflight()
+# -> { ok: bool, gemini_api_key: bool, ffmpeg: {installed, version}, write_permissions: bool, base_path: str }
+
+veo.version()
+# -> { veo_tools: str | None, dependencies: {...}, ffmpeg: str | None }
+```
+
+### Non-blocking generation jobs
+
+```python
+import veotools as veo
+
+# Start a job immediately
+start = veo.generate_start({
+  "prompt": "A serene mountain landscape at sunset",
+  "model": "veo-3.0-fast-generate-preview"
+})
+job_id = start["job_id"]
+
+# Poll status
+status = veo.generate_get(job_id)
+# -> { job_id, status, progress, message, kind, remote_operation_id?, result?, error_code?, error_message? }
+
+# Request cancellation (cooperative)
+veo.generate_cancel(job_id)
+```
+
+## Model discovery
+```python
+models = veotools.list_models(include_remote=True)
+print([m["id"] for m in models["models"] if m["id"].startswith("veo-")])
+```
 
 ## Progress Tracking
 
@@ -133,7 +164,7 @@ result = veo.generate_from_text(
 )
 ```
 
-## Web-Ready Results
+## Web-ready results
 
 All results are JSON-serializable for API integration:
 
@@ -152,23 +183,37 @@ json_response = json.dumps(data)
 
 See the `examples/` folder for complete examples:
 
-- `continue_video.py` - Continue any video with AI
-- `create_story.py` - Create stories from mixed media
-- `workflow_bridge.py` - Complex workflow examples
+- `examples/text_to_video.py`
+- `examples/video_to_video.py`
+- `examples/chained_workflow.py`
+- `examples/all_functions.py`
 
-## Architecture
+## Layout
 
 ```
-veo_tools/
-├── core.py          # Client and configuration
-├── models.py        # Data models (VideoResult, etc.)
-├── bridge.py        # Workflow chaining
-├── generate/        # Video generation
-│   └── video.py
-├── process/         # Video processing
-│   └── extractor.py
-└── stitch/          # Video stitching
-    └── seamless.py
+.
+├── examples
+│   ├── all_functions.py
+│   ├── chained_workflow.py
+│   ├── text_to_video.py
+│   └── video_to_video.py
+├── readme.md
+├── requirements.txt
+└── veo_tools
+    ├── __init__.py
+    ├── bridge.py
+    ├── core.py
+    ├── generate
+    │   ├── __init__.py
+    │   └── video.py
+    ├── models.py
+    ├── process
+    │   ├── __init__.py
+    │   └── extractor.py
+    └── stitch
+        ├── __init__.py
+        └── seamless.py
+    └── mcp_api.py
 ```
 
 ## Key Concepts
@@ -191,20 +236,17 @@ on_progress=lambda msg, pct: print(f"{msg}: {pct}%")
 ### Storage Manager
 Organized file management (local now, cloud-ready for future).
 
-## Limitations
+## Notes
 
-- Video generation takes 1-3 minutes
-- Veo access requires allowlist approval
-- Generated videos are watermarked with SynthID
-- Videos expire after 2 days on server
+- Generation usually takes 1–3 minutes
+- Veo access may require allowlist
 
-## Future Enhancements
-
-- [ ] Gemini vision integration for smart transitions
-- [ ] Batch processing for multiple videos
-- [ ] FastAPI wrapper for REST API
-- [ ] Cloud storage support (S3, GCS)
-- [ ] Advanced transition effects
+## Publishing (maintainers)
+```bash
+pip install build twine
+python -m build
+twine upload dist/*
+```
 
 ## License
 

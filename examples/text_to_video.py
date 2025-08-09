@@ -7,12 +7,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import veo_tools as veo
 
-def generate_single_video(prompt: str, model: str = "veo-3.0-fast-generate-preview"):
+def generate_single_video(prompt: str, model: str | None = None):
     veo.init()
     
     print("Video Generation")
     print("=" * 50)
     print(f"Prompt: {prompt}")
+    if not model:
+        # Pick a sensible default from available models
+        models = veo.list_models(include_remote=True)["models"]
+        veo_models = [m for m in models if m["id"].startswith("veo-")]
+        model = next((m["id"] for m in veo_models if "fast" in m["id"]), "veo-3.0-fast-generate-preview")
     print(f"Model: {model}")
     print("-" * 50)
     
@@ -41,28 +46,15 @@ def main():
     if len(sys.argv) > 1:
         prompt = " ".join(sys.argv[1:])
     else:
-        print("Usage: python simple_generation.py <your prompt>")
+        print("Usage: python examples/text_to_video.py <your prompt> [model]")
         print(f"\nUsing default prompt: {default_prompt}")
         prompt = default_prompt
-    
-    print("\nAvailable models:")
-    print("1. veo-3.0-fast-generate-preview (1 min, with audio)")
-    print("2. veo-3.0-generate-preview (2 min, with audio)")
-    print("3. veo-2.0-generate-001 (3 min, no audio, more control)")
-    
-    model_choice = input("\nSelect model (1-3, default=1): ").strip() or "1"
-    
-    models = {
-        "1": "veo-3.0-fast-generate-preview",
-        "2": "veo-3.0-generate-preview",
-        "3": "veo-2.0-generate-001"
-    }
-    
-    model = models.get(model_choice, "veo-3.0-fast-generate-preview")
+    model = sys.argv[2] if len(sys.argv) > 2 else None
     
     try:
         result = generate_single_video(prompt, model)
         print(f"\nSuccess: {result.path}")
+        print(f"URL: {result.url}")
         
     except Exception as e:
         print(f"\nError: {e}")

@@ -29,16 +29,42 @@ class VeoClient:
         return self._client
 
 class StorageManager:
-    def __init__(self, base_path: str = "output"):
-        self.base_path = Path(base_path)
-        self.base_path.mkdir(exist_ok=True)
-        
+    def __init__(self, base_path: Optional[str] = None):
+        """Manage output directories for videos, frames, and temp files.
+
+        Default resolution order for base path:
+        1. VEO_OUTPUT_DIR environment variable (if set)
+        2. Project root alongside the package (../output)
+        3. Current working directory (./output) as a safe fallback
+        """
+        resolved_base: Path
+
+        # 1) Environment override
+        env_base = os.getenv("VEO_OUTPUT_DIR")
+        if base_path:
+            resolved_base = Path(base_path)
+        elif env_base:
+            resolved_base = Path(env_base)
+        else:
+            # 2) Attempt to place under project root (parent of the package dir)
+            try:
+                package_root = Path(__file__).resolve().parents[2]
+                candidate = package_root / "output"
+                candidate.mkdir(parents=True, exist_ok=True)
+                resolved_base = candidate
+            except Exception:
+                # 3) Fallback to CWD/output
+                resolved_base = Path.cwd() / "output"
+
+        self.base_path = resolved_base
+        self.base_path.mkdir(parents=True, exist_ok=True)
+
         self.videos_dir = self.base_path / "videos"
         self.frames_dir = self.base_path / "frames"
         self.temp_dir = self.base_path / "temp"
-        
+
         for dir_path in [self.videos_dir, self.frames_dir, self.temp_dir]:
-            dir_path.mkdir(exist_ok=True)
+            dir_path.mkdir(parents=True, exist_ok=True)
     
     def get_video_path(self, filename: str) -> Path:
         return self.videos_dir / filename

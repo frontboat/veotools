@@ -26,6 +26,14 @@ from .stitch.seamless import (
 )
 
 from .bridge import Bridge
+from .mcp_api import (
+    preflight,
+    version,
+    list_models,
+    generate_start,
+    generate_get,
+    generate_cancel,
+)
 
 __version__ = "0.1.0"
 
@@ -47,7 +55,14 @@ __all__ = [
     "stitch_videos",
     "stitch_with_transitions",
     "create_transition_points",
-    "Bridge"
+    "Bridge",
+    # MCP-friendly APIs
+    "preflight",
+    "version",
+    "generate_start",
+    "generate_get",
+    "generate_cancel",
+    "list_models",
 ]
 
 def init(api_key: str = None, log_level: str = "WARNING"):
@@ -62,4 +77,4 @@ def init(api_key: str = None, log_level: str = "WARNING"):
     
     VeoClient()
     
-    logger.info(f"veo-tools {__version__} initialized")
+    logger.info(f"veotools {__version__} initialized")
