@@ -49,11 +49,18 @@ def cmd_generate(ns: argparse.Namespace) -> int:
     kwargs: Dict[str, Any] = {}
     if ns.model:
         kwargs["model"] = ns.model
+    if ns.aspect_ratio:
+        kwargs["aspect_ratio"] = ns.aspect_ratio
+    if ns.negative_prompt:
+        kwargs["negative_prompt"] = ns.negative_prompt
+    if ns.person_generation:
+        kwargs["person_generation"] = ns.person_generation
     if ns.image:
         result = veo.generate_from_image(
             image_path=Path(ns.image),
             prompt=ns.prompt,
             on_progress=_print_progress,
+            **kwargs,
         )
     elif ns.video:
         result = veo.generate_from_video(
@@ -79,12 +86,21 @@ def cmd_generate(ns: argparse.Namespace) -> int:
 def cmd_continue(ns: argparse.Namespace) -> int:
     veo.init()
     # Generate continuation
+    kwargs: Dict[str, Any] = {}
+    if ns.model:
+        kwargs["model"] = ns.model
+    if ns.aspect_ratio:
+        kwargs["aspect_ratio"] = ns.aspect_ratio
+    if ns.negative_prompt:
+        kwargs["negative_prompt"] = ns.negative_prompt
+    if ns.person_generation:
+        kwargs["person_generation"] = ns.person_generation
     gen = veo.generate_from_video(
         video_path=Path(ns.video),
         prompt=ns.prompt,
         extract_at=ns.extract_at,
-        model=ns.model,
         on_progress=_print_progress,
+        **kwargs,
     )
     # Stitch with original
     stitched = veo.stitch_videos([Path(ns.video), Path(gen.path)], overlap=ns.overlap)
@@ -117,6 +133,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--image", help="Path to input image")
     s.add_argument("--video", help="Path to input video")
     s.add_argument("--extract-at", type=float, default=-1.0, help="Time offset for video continuation")
+    s.add_argument("--aspect-ratio", choices=["16:9","9:16"], help="Requested aspect ratio (model-dependent)")
+    s.add_argument("--negative-prompt", help="Text to avoid in generation")
+    s.add_argument("--person-generation", choices=["allow_all","allow_adult","dont_allow"], help="Person generation policy (model/region dependent)")
     s.add_argument("--json", action="store_true", help="Output JSON")
     s.set_defaults(func=cmd_generate)
 
@@ -126,6 +145,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--model", help="Model ID")
     s.add_argument("--extract-at", type=float, default=-1.0)
     s.add_argument("--overlap", type=float, default=1.0)
+    s.add_argument("--aspect-ratio", choices=["16:9","9:16"], help="Requested aspect ratio (model-dependent)")
+    s.add_argument("--negative-prompt", help="Text to avoid in generation")
+    s.add_argument("--person-generation", choices=["allow_all","allow_adult","dont_allow"], help="Person generation policy (model/region dependent)")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_continue)
 

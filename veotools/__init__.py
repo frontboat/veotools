@@ -35,7 +35,7 @@ from .mcp_api import (
     generate_cancel,
 )
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 __all__ = [
     "VeoClient",

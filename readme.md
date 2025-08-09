@@ -158,6 +158,41 @@ status = veo.generate_get(job_id)
 veo.generate_cancel(job_id)
 ```
 
+### Cursor MCP configuration
+
+Add an entry in `~/.cursor/mcp.json` pointing to the installed `veo-mcp` (or your venv path):
+
+```json
+{
+  "mcpServers": {
+    "veotools": {
+      "command": "/Users/you/.venv/bin/veo-mcp",
+      "args": [],
+      "env": {
+        "GEMINI_API_KEY": "your-api-key",
+        "VEO_OUTPUT_DIR": "/Users/you/projects/output" 
+      },
+      "disabled": false
+    }
+  }
+}
+```
+
+Alternatively, use Python directly:
+
+```json
+{
+  "mcpServers": {
+    "veotools": {
+      "command": "/Users/you/.venv/bin/python",
+      "args": ["-m", "veotools.mcp_server"],
+      "env": { "GEMINI_API_KEY": "your-api-key" },
+      "disabled": false
+    }
+  }
+}
+```
+
 ## Model discovery
 ```python
 models = veotools.list_models(include_remote=True)

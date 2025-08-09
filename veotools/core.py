@@ -119,6 +119,7 @@ class ModelConfig:
             "supports_duration": False,
             "supports_enhance": False,
             "supports_fps": False,
+            "supports_aspect_ratio": True,
             "supports_audio": True,
             "default_duration": 8,
             "generation_time": 60
@@ -128,6 +129,7 @@ class ModelConfig:
             "supports_duration": False,
             "supports_enhance": False,
             "supports_fps": False,
+            "supports_aspect_ratio": True,
             "supports_audio": True,
             "default_duration": 8,
             "generation_time": 120
@@ -137,6 +139,7 @@ class ModelConfig:
             "supports_duration": True,
             "supports_enhance": True,
             "supports_fps": True,
+            "supports_aspect_ratio": True,
             "supports_audio": False,
             "default_duration": 5,
             "generation_time": 180
@@ -166,5 +169,27 @@ class ModelConfig:
         
         if config["supports_fps"] and "fps" in kwargs:
             params["fps"] = kwargs["fps"]
+
+        # Aspect ratio (e.g., "16:9"; Veo 3 limited to 16:9; Veo 2 supports 16:9 and 9:16)
+        if config.get("supports_aspect_ratio") and "aspect_ratio" in kwargs and kwargs["aspect_ratio"]:
+            ar = str(kwargs["aspect_ratio"])  # normalize
+            model_key = model.replace("models/", "")
+            if model_key.startswith("veo-3.0"):
+                allowed = {"16:9"}
+            elif model_key.startswith("veo-2.0"):
+                allowed = {"16:9", "9:16"}
+            else:
+                allowed = {"16:9"}
+            if ar not in allowed:
+                raise ValueError(f"aspect_ratio '{ar}' not supported for model '{model_key}'. Allowed: {sorted(allowed)}")
+            params["aspect_ratio"] = ar
+
+        # Docs-backed pass-throughs
+        if "negative_prompt" in kwargs and kwargs["negative_prompt"]:
+            params["negative_prompt"] = kwargs["negative_prompt"]
+
+        if "person_generation" in kwargs and kwargs["person_generation"]:
+            # Person generation options vary by model/region; pass through as provided
+            params["person_generation"] = kwargs["person_generation"]
         
         return types.GenerateVideosConfig(**params)
