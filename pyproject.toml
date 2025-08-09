@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "veotools"
-version = "0.1.1"
+version = "0.1.3"
 description = "A Python toolkit for AI-powered video generation and seamless stitching using Google's Veo models."
 readme = "readme.md"
 requires-python = ">=3.10"
