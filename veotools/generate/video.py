@@ -12,6 +12,32 @@ from ..models import VideoResult, VideoMetadata
 from ..process.extractor import extract_frame, get_video_info
 
 
+def _validate_person_generation(model: str, mode: str, person_generation: Optional[str]) -> None:
+    """Validate person_generation per model and mode.
+
+    mode: "text" | "image" | "video" (video treated like image-seeded continuation)
+    """
+    if not person_generation:
+        return
+    model_key = model.replace("models/", "") if model else ""
+    if model_key.startswith("veo-3.0"):
+        if mode == "text":
+            allowed = {"allow_all"}
+        else:  # image or video
+            allowed = {"allow_adult"}
+    elif model_key.startswith("veo-2.0"):
+        if mode == "text":
+            allowed = {"allow_all", "allow_adult", "dont_allow"}
+        else:  # image or video
+            allowed = {"allow_adult", "dont_allow"}
+    else:
+        # Default to Veo 3 constraints if unknown
+        allowed = {"allow_all"} if mode == "text" else {"allow_adult"}
+    if person_generation not in allowed:
+        raise ValueError(
+            f"person_generation='{person_generation}' not allowed for {model_key or 'veo-3.0'} in {mode} mode. Allowed: {sorted(allowed)}"
+        )
+
 def generate_from_text(
     prompt: str,
     model: str = "veo-3.0-fast-generate-preview",
@@ -36,6 +62,8 @@ def generate_from_text(
         config_params = kwargs.copy()
         if duration_seconds:
             config_params["duration_seconds"] = duration_seconds
+        # Validate person_generation constraints (Veo 3/2 rules)
+        _validate_person_generation(model, "text", config_params.get("person_generation"))
         
         config = ModelConfig.build_generation_config(
             model.replace("models/", ""),
@@ -125,9 +153,13 @@ def generate_from_image(
         if not model.startswith("models/"):
             model = f"models/{model}"
         
+        config_params = kwargs.copy()
+        # Validate person_generation constraints (Veo 3/2 rules)
+        _validate_person_generation(model, "image", config_params.get("person_generation"))
+        
         config = ModelConfig.build_generation_config(
             model.replace("models/", ""),
-            **kwargs
+            **config_params
         )
         
         progress.update("Submitting", 10)
@@ -216,6 +248,10 @@ def generate_from_video(
         frame_path = extract_frame(video_path, time_offset=extract_at)
         progress.update("Extracted", 20)
         
+        # Validate person_generation constraints for continuation (treat like image)
+        if "person_generation" in kwargs:
+            _validate_person_generation(model, "video", kwargs.get("person_generation"))
+
         result = generate_from_image(
             frame_path,
             prompt,

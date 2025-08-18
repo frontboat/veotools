@@ -55,6 +55,15 @@ def cmd_generate(ns: argparse.Namespace) -> int:
         kwargs["negative_prompt"] = ns.negative_prompt
     if ns.person_generation:
         kwargs["person_generation"] = ns.person_generation
+    if ns.cached_content:
+        kwargs["cached_content"] = ns.cached_content
+    if ns.safety_json:
+        try:
+            parsed = json.loads(ns.safety_json)
+            if isinstance(parsed, list):
+                kwargs["safety_settings"] = parsed
+        except Exception:
+            pass
     if ns.image:
         result = veo.generate_from_image(
             image_path=Path(ns.image),
@@ -95,6 +104,15 @@ def cmd_continue(ns: argparse.Namespace) -> int:
         kwargs["negative_prompt"] = ns.negative_prompt
     if ns.person_generation:
         kwargs["person_generation"] = ns.person_generation
+    if ns.cached_content:
+        kwargs["cached_content"] = ns.cached_content
+    if ns.safety_json:
+        try:
+            parsed = json.loads(ns.safety_json)
+            if isinstance(parsed, list):
+                kwargs["safety_settings"] = parsed
+        except Exception:
+            pass
     gen = veo.generate_from_video(
         video_path=Path(ns.video),
         prompt=ns.prompt,
@@ -136,6 +154,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--aspect-ratio", choices=["16:9","9:16"], help="Requested aspect ratio (model-dependent)")
     s.add_argument("--negative-prompt", help="Text to avoid in generation")
     s.add_argument("--person-generation", choices=["allow_all","allow_adult","dont_allow"], help="Person generation policy (model/region dependent)")
+    s.add_argument("--cached-content", help="Cached content name (from caching API)")
+    s.add_argument("--safety-json", help="JSON list of {category, threshold} safety settings")
     s.add_argument("--json", action="store_true", help="Output JSON")
     s.set_defaults(func=cmd_generate)
 
@@ -148,6 +168,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--aspect-ratio", choices=["16:9","9:16"], help="Requested aspect ratio (model-dependent)")
     s.add_argument("--negative-prompt", help="Text to avoid in generation")
     s.add_argument("--person-generation", choices=["allow_all","allow_adult","dont_allow"], help="Person generation policy (model/region dependent)")
+    s.add_argument("--cached-content", help="Cached content name (from caching API)")
+    s.add_argument("--safety-json", help="JSON list of {category, threshold} safety settings")
     s.add_argument("--json", action="store_true")
     s.set_defaults(func=cmd_continue)
 

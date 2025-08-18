@@ -2,6 +2,8 @@
 scrap
 output
 .DS_Store
+docs
+TODO.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

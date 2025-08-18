@@ -192,4 +192,35 @@ class ModelConfig:
             # Person generation options vary by model/region; pass through as provided
             params["person_generation"] = kwargs["person_generation"]
         
-        return types.GenerateVideosConfig(**params)
+        # Safety settings (optional, SDK >= 1.30.0 for some modalities). Accept either
+        # a list of dicts {category, threshold} or already-constructed types.SafetySetting.
+        safety_settings = kwargs.get("safety_settings")
+        if safety_settings:
+            normalized: list = []
+            for item in safety_settings:
+                try:
+                    if hasattr(item, "category") and hasattr(item, "threshold"):
+                        normalized.append(item)
+                    elif isinstance(item, dict):
+                        normalized.append(types.SafetySetting(
+                            category=item.get("category"),
+                            threshold=item.get("threshold"),
+                        ))
+                except Exception:
+                    # Ignore malformed entries
+                    continue
+            if normalized:
+                params["safety_settings"] = normalized
+
+        # Cached content handle (best-effort pass-through if supported)
+        if "cached_content" in kwargs and kwargs["cached_content"]:
+            params["cached_content"] = kwargs["cached_content"]
+        
+        # Construct config, dropping unknown fields if the SDK doesn't support them
+        try:
+            return types.GenerateVideosConfig(**params)
+        except TypeError:
+            # Remove optional fields that may not be recognized by this client version
+            for optional_key in ["safety_settings", "cached_content"]:
+                params.pop(optional_key, None)
+            return types.GenerateVideosConfig(**params)

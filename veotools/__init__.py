@@ -33,9 +33,14 @@ from .mcp_api import (
     generate_start,
     generate_get,
     generate_cancel,
+    cache_create_from_files,
+    cache_get,
+    cache_list,
+    cache_update,
+    cache_delete,
 )
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 
 __all__ = [
     "VeoClient",
@@ -63,6 +68,11 @@ __all__ = [
     "generate_get",
     "generate_cancel",
     "list_models",
+    "cache_create_from_files",
+    "cache_get",
+    "cache_list",
+    "cache_update",
+    "cache_delete",
 ]
 
 def init(api_key: str = None, log_level: str = "WARNING"):

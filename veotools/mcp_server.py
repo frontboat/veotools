@@ -49,6 +49,39 @@ def list_models(include_remote: bool = True) -> dict:
 
 
 @app.tool()
+def cache_create_from_files(model: str, files: list[str], system_instruction: str | None = None) -> dict:
+    """Create a cached content handle from local files.
+
+    Returns {name, model, contents_count}.
+    """
+    return veo.cache_create_from_files(model=model, files=files, system_instruction=system_instruction)
+
+
+@app.tool()
+def cache_get(name: str) -> dict:
+    """Get cached content metadata by name."""
+    return veo.cache_get(name)
+
+
+@app.tool()
+def cache_list() -> dict:
+    """List cached content metadata entries."""
+    return veo.cache_list()
+
+
+@app.tool()
+def cache_update(name: str, ttl_seconds: int | None = None, expire_time_iso: str | None = None) -> dict:
+    """Update TTL or expiry time for a cache."""
+    return veo.cache_update(name=name, ttl_seconds=ttl_seconds, expire_time_iso=expire_time_iso)
+
+
+@app.tool()
+def cache_delete(name: str) -> dict:
+    """Delete a cached content entry by name."""
+    return veo.cache_delete(name)
+
+
+@app.tool()
 def generate_start(
     prompt: str,
     model: Optional[str] = None,

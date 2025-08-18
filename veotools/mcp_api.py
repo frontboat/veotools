@@ -40,6 +40,7 @@ from .generate.video import (
     generate_from_video,
 )
 from .core import ModelConfig, VeoClient
+from google.genai import types
 
 
 # ----------------------------
@@ -411,6 +412,11 @@ __all__ = [
     "generate_start",
     "generate_get",
     "generate_cancel",
+    "cache_create_from_files",
+    "cache_get",
+    "cache_list",
+    "cache_update",
+    "cache_delete",
 ]
 
 
@@ -478,4 +484,115 @@ def list_models(include_remote: bool = True) -> Dict[str, Any]:
     except Exception:
         return {"models": list(models.values())}
 
+
+
+# ----------------------------
+# Caching helpers (best-effort)
+# ----------------------------
+
+
+def cache_create_from_files(model: str, files: list[str], system_instruction: Optional[str] = None) -> Dict[str, Any]:
+    """Create a cached content handle from local file paths.
+
+    Returns { name, model, system_instruction?, contents_count } or { error_code, error_message } on failure.
+    """
+    try:
+        client = VeoClient().client
+        uploaded = []
+        for f in files:
+            p = Path(f)
+            if not p.exists():
+                return {"error_code": "VALIDATION", "error_message": f"File not found: {f}"}
+            uploaded.append(client.files.upload(file=p))
+        cfg = types.CreateCachedContentConfig(
+            contents=uploaded,
+            system_instruction=system_instruction if system_instruction else None,
+        )
+        cache = client.caches.create(model=model, config=cfg)
+        return {
+            "name": getattr(cache, "name", None),
+            "model": model,
+            "system_instruction": system_instruction,
+            "contents_count": len(uploaded),
+        }
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
+
+
+def cache_get(name: str) -> Dict[str, Any]:
+    """Retrieve cached content metadata by name.
+
+    Returns minimal metadata; fields vary by library version.
+    """
+    try:
+        client = VeoClient().client
+        cache = client.caches.get(name=name)
+        out: Dict[str, Any] = {"name": getattr(cache, "name", name)}
+        # Attempt to surface lifecycle info when available
+        for k in ("ttl", "expire_time", "create_time"):
+            v = getattr(cache, k, None)
+            if v is not None:
+                out[k] = v
+        return out
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
+
+
+def cache_list() -> Dict[str, Any]:
+    """List cached content metadata entries.
+
+    Returns { caches: [ {name, model?, display_name?, create_time?, update_time?, expire_time?, usage_metadata?} ] }
+    """
+    try:
+        client = VeoClient().client
+        items = []
+        for cache in client.caches.list():
+            entry: Dict[str, Any] = {"name": getattr(cache, "name", None)}
+            for k in ("model", "display_name", "create_time", "update_time", "expire_time", "usage_metadata"):
+                v = getattr(cache, k, None)
+                if v is not None:
+                    entry[k] = v
+            items.append(entry)
+        return {"caches": items}
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
+
+
+def cache_update(name: str, ttl_seconds: Optional[int] = None, expire_time_iso: Optional[str] = None) -> Dict[str, Any]:
+    """Update TTL or expire_time for a cache (one or the other).
+
+    - ttl_seconds: integer seconds for TTL (e.g., 300)
+    - expire_time_iso: timezone-aware ISO-8601 datetime string
+    """
+    try:
+        client = VeoClient().client
+        cfg_kwargs: Dict[str, Any] = {}
+        if ttl_seconds is not None:
+            cfg_kwargs["ttl"] = f"{int(ttl_seconds)}s"
+        if expire_time_iso:
+            cfg_kwargs["expire_time"] = expire_time_iso
+        if not cfg_kwargs:
+            return {"error_code": "VALIDATION", "error_message": "Provide ttl_seconds or expire_time_iso"}
+        updated = client.caches.update(
+            name=name,
+            config=types.UpdateCachedContentConfig(**cfg_kwargs),
+        )
+        out: Dict[str, Any] = {"name": getattr(updated, "name", name)}
+        for k in ("expire_time", "ttl", "update_time"):
+            v = getattr(updated, k, None)
+            if v is not None:
+                out[k] = v
+        return out
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
+
+
+def cache_delete(name: str) -> Dict[str, Any]:
+    """Delete a cached content entry by name."""
+    try:
+        client = VeoClient().client
+        client.caches.delete(name)
+        return {"deleted": True, "name": name}
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
 

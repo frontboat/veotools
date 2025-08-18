@@ -8,6 +8,8 @@ Concise Python SDK and MCP server for generating and extending videos with Googl
 - MCP tools with progress streaming (start/get/cancel, continue_video) and recent videos resource
 - Model discovery (local registry + remote list, cached)
 - Accurate metadata via ffprobe/OpenCV; outputs under project `output/` (override with `VEO_OUTPUT_DIR`)
+- Safety settings pass-through for generation (best-effort)
+- Context caching helpers and `cached_content` support
 
 ## Install
 
@@ -70,11 +72,14 @@ Install exposes the `veo` command. Use `-h/--help` on any subcommand.
 veo preflight
 veo list-models --remote
 
-# Generate from text
-veo generate --prompt "cat riding a hat" --model veo-3.0-fast-generate-preview
+# Generate from text (optional safety + cached content)
+veo generate --prompt "cat riding a hat" --model veo-3.0-fast-generate-preview \
+  --safety-json "[{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_ONLY_HIGH\"}]" \
+  --cached-content "caches/your-cache-name"
 
 # Continue a video and stitch seamlessly
-veo continue --video dog.mp4 --prompt "the dog finds a treasure chest" --overlap 1.0
+veo continue --video dog.mp4 --prompt "the dog finds a treasure chest" --overlap 1.0 \
+  --safety-json "[{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_ONLY_HIGH\"}]"
 
 # Help
 veo --help
@@ -104,6 +109,13 @@ final_video = (bridge
 - `generate_from_text(prompt, model, **kwargs)` - Generate video from text
 - `generate_from_image(image_path, prompt, model, **kwargs)` - Generate video from image
 - `generate_from_video(video_path, prompt, extract_at, model, **kwargs)` - Continue video
+
+Optional config supported (best-effort pass-through):
+- `aspect_ratio` (model-dependent)
+- `negative_prompt`
+- `person_generation` (validated per Veo model and mode)
+- `safety_settings` (list of {category, threshold} or `types.SafetySetting`)
+- `cached_content` (cache name string)
 
 ### Processing
 
@@ -156,6 +168,50 @@ status = veo.generate_get(job_id)
 
 # Request cancellation (cooperative)
 veo.generate_cancel(job_id)
+```
+
+### Caching helpers
+
+Programmatic usage via MCP-friendly APIs:
+
+```python
+import veotools as veo
+
+# Create a cache from files
+cache = veo.cache_create_from_files(
+  model="gemini-1.5-flash-001",
+  files=["media/a11.txt"],
+  system_instruction="You are an expert analyzing transcripts."
+)
+
+# Use cached content in generation
+start = veo.generate_start({
+  "prompt": "Summarize the transcript",
+  "model": "veo-3.0-fast-generate-preview",
+  "options": {"cached_content": cache.get("name")}
+})
+```
+
+Manage cached content:
+
+```python
+import veotools as veo
+
+# List caches (metadata only)
+listing = veo.cache_list()
+for c in listing.get("caches", []):
+    print(c.get("name"), c.get("display_name"), c.get("expire_time"))
+
+# Get single cache metadata
+meta = veo.cache_get(name="caches/abc123")
+
+# Update TTL or expiry time
+veo.cache_update(name="caches/abc123", ttl_seconds=600)  # set TTL to 10 minutes
+# or
+veo.cache_update(name="caches/abc123", expire_time_iso="2025-01-27T16:02:36.473528+00:00")
+
+# Delete cache
+veo.cache_delete(name="caches/abc123")
 ```
 
 ### Cursor MCP configuration
@@ -279,6 +335,9 @@ Organized file management (local now, cloud-ready for future).
 
 - Generation usually takes 1–3 minutes
 - Veo access may require allowlist
+- Person generation constraints per Veo docs:
+  - Veo 3: text→video allows `allow_all`; image/video-seeded allows `allow_adult`
+  - Veo 2: text→video allows `allow_all`, `allow_adult`, `dont_allow`; image/video-seeded allows `allow_adult`, `dont_allow`
 
 ## License
 
