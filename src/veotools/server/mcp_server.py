@@ -13,7 +13,7 @@ from typing import Optional, List, Dict
 from mcp.server.fastmcp import FastMCP, Context
 import veotools as veo
 from veotools.process.extractor import get_video_info
-from veotools.mcp_api import JobStore
+from veotools.api.mcp_api import JobStore
 
 
 app = FastMCP("veotools")

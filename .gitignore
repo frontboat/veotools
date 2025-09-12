@@ -2,8 +2,15 @@
 scrap
 output
 .DS_Store
-docs
 TODO.md
+
+# Generated LLM documentation (auto-generated during build)
+llm.txt
+llm.xml
+llm.json
+docs/llm.txt
+docs/llm.xml
+docs/llm.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

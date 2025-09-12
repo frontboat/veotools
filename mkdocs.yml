@@ -1,0 +1,96 @@
+site_name: Veotools Documentation
+site_description: Python SDK and MCP server for video generation with Google Veo
+site_author: frontboat
+site_url: https://github.com/frontboat/veotools
+
+repo_name: frontboat/veotools
+repo_url: https://github.com/frontboat/veotools
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+hooks:
+  - docs/hooks.py
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_category_heading: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_if_no_docstring: false
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: true
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            show_signature_annotations: true
+            signature_crossrefs: true
+            summary: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - API Reference:
+    - Overview: api/overview.md
+    - Video Generation: api/generate/video.md
+  - LLM Docs: llm.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/frontboat/veotools
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/veotools/
+
+copyright: Copyright &copy; 2024 frontboat

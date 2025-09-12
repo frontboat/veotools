@@ -19,7 +19,11 @@ pip install veotools
 # Or install from source
 pip install -e .
 
-pip install "veotools[mcp]"  # optional MCP CLI
+# With MCP server support
+pip install "veotools[mcp]"
+
+# For development (includes testing tools)
+pip install -e ".[dev,mcp]"
 
 # Set your API key
 export GEMINI_API_KEY="your-api-key"
@@ -291,24 +295,34 @@ See the `examples/` folder for complete examples:
 - `examples/chained_workflow.py`
 - `examples/all_functions.py`
 
-## Layout
+## Project Structure
 
 ```
-.
-├── __init__.py
-├── bridge.py
-├── core.py
-├── generate
-│   ├── __init__.py
-│   └── video.py
-├── mcp_api.py
-├── models.py
-├── process
-│   ├── __init__.py
-│   └── extractor.py
-└── stitch
-    ├── __init__.py
-    └── seamless.py
+src/veotools/
+├── __init__.py          # Package initialization and exports
+├── core.py              # Core client and storage management
+├── models.py            # Data models and result objects
+├── cli.py               # Command-line interface
+├── api/
+│   ├── bridge.py        # Workflow orchestration API
+│   └── mcp_api.py       # MCP-friendly wrapper functions
+├── generate/
+│   └── video.py         # Video generation functions
+├── process/
+│   └── extractor.py     # Frame extraction and metadata
+├── stitch/
+│   └── seamless.py      # Video stitching capabilities
+└── server/
+    └── mcp_server.py    # MCP server implementation
+
+tests/                   # Test suite (mirrors src structure)
+├── conftest.py          # Shared fixtures and configuration
+├── test_core.py
+├── test_models.py
+├── test_api/
+├── test_generate/
+├── test_process/
+└── test_stitch/
 ```
 
 ## Key Concepts
@@ -343,9 +357,74 @@ Organized file management (local now, cloud-ready for future).
 
 MIT
 
+## Development
+
+### Setting Up Development Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/frontboat/veotools.git
+cd veotools
+
+# Install in development mode with all dependencies
+pip install -e ".[dev,mcp]"
+
+# Set up pre-commit hooks (optional)
+pre-commit install
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run only unit tests (fast, no external dependencies)
+pytest -m unit
+
+# Run integration tests
+pytest -m integration
+
+# Run with coverage report
+pytest --cov=veotools --cov-report=html
+
+# Run tests in parallel
+pytest -n auto
+
+# Using Make commands
+make test           # Run all tests
+make test-unit      # Run only unit tests
+make test-coverage  # Run with coverage report
+```
+
+### Testing Guidelines
+
+- Tests are organized to mirror the source code structure
+- All tests use pytest and follow AAA pattern (Arrange-Act-Assert)
+- External dependencies (API calls, ffmpeg) are mocked in unit tests
+- Fixtures are defined in `tests/conftest.py`
+- Mark tests appropriately: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`
+
+### Building and Publishing
+
+```bash
+# Build the package
+python -m build
+
+# Check the package
+twine check dist/*
+
+# Upload to PyPI (requires credentials)
+twine upload dist/*
+```
+
 ## Contributing
 
-Pull requests welcome!
+Pull requests welcome! Please ensure:
+- All tests pass (`make test`)
+- Code follows existing style conventions
+- New features include appropriate tests
+- Documentation is updated as needed
 
 ## Support
 

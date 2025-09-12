@@ -9,15 +9,44 @@ from google.genai import types
 load_dotenv()
 
 class VeoClient:
+    """Singleton client for Google GenAI API interactions.
+    
+    This class implements a singleton pattern to ensure only one client instance
+    is created throughout the application lifecycle. It manages the authentication
+    and connection to Google's Generative AI API.
+    
+    Attributes:
+        client: The underlying Google GenAI client instance.
+    
+    Raises:
+        ValueError: If GEMINI_API_KEY environment variable is not set.
+    
+    Examples:
+        >>> client = VeoClient()
+        >>> api_client = client.client
+        >>> # Use api_client for API calls
+    """
     _instance = None
     _client = None
     
     def __new__(cls):
+        """Create or return the singleton instance.
+        
+        Returns:
+            VeoClient: The singleton VeoClient instance.
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
     
     def __init__(self):
+        """Initialize the GenAI client with API key from environment.
+        
+        The client is only initialized once, even if __init__ is called multiple times.
+        
+        Raises:
+            ValueError: If GEMINI_API_KEY is not found in environment variables.
+        """
         if self._client is None:
             api_key = os.getenv('GEMINI_API_KEY')
             if not api_key:
@@ -26,6 +55,11 @@ class VeoClient:
     
     @property
     def client(self):
+        """Get the Google GenAI client instance.
+        
+        Returns:
+            genai.Client: The initialized GenAI client.
+        """
         return self._client
 
 class StorageManager:
@@ -73,15 +107,64 @@ class StorageManager:
             dir_path.mkdir(parents=True, exist_ok=True)
     
     def get_video_path(self, filename: str) -> Path:
+        """Get the full path for a video file.
+        
+        Args:
+            filename: Name of the video file.
+            
+        Returns:
+            Path: Full path to the video file in the videos directory.
+            
+        Examples:
+            >>> manager = StorageManager()
+            >>> path = manager.get_video_path("output.mp4")
+            >>> print(path)  # /path/to/output/videos/output.mp4
+        """
         return self.videos_dir / filename
     
     def get_frame_path(self, filename: str) -> Path:
+        """Get the full path for a frame image file.
+        
+        Args:
+            filename: Name of the frame file.
+            
+        Returns:
+            Path: Full path to the frame file in the frames directory.
+            
+        Examples:
+            >>> manager = StorageManager()
+            >>> path = manager.get_frame_path("frame_001.jpg")
+            >>> print(path)  # /path/to/output/frames/frame_001.jpg
+        """
         return self.frames_dir / filename
     
     def get_temp_path(self, filename: str) -> Path:
+        """Get the full path for a temporary file.
+        
+        Args:
+            filename: Name of the temporary file.
+            
+        Returns:
+            Path: Full path to the file in the temp directory.
+            
+        Examples:
+            >>> manager = StorageManager()
+            >>> path = manager.get_temp_path("processing.tmp")
+            >>> print(path)  # /path/to/output/temp/processing.tmp
+        """
         return self.temp_dir / filename
     
     def cleanup_temp(self):
+        """Remove all files from the temporary directory.
+        
+        This method safely removes all files in the temp directory while preserving
+        the directory structure. Errors during deletion are silently ignored.
+        
+        Examples:
+            >>> manager = StorageManager()
+            >>> manager.cleanup_temp()
+            >>> # All temp files are now deleted
+        """
         for file in self.temp_dir.glob("*"):
             try:
                 file.unlink()
@@ -89,30 +172,100 @@ class StorageManager:
                 pass
     
     def get_url(self, path: Path) -> Optional[str]:
+        """Convert a file path to a file:// URL.
+        
+        Args:
+            path: Path to the file.
+            
+        Returns:
+            Optional[str]: File URL if the file exists, None otherwise.
+            
+        Examples:
+            >>> manager = StorageManager()
+            >>> video_path = manager.get_video_path("test.mp4")
+            >>> url = manager.get_url(video_path)
+            >>> print(url)  # file:///absolute/path/to/output/videos/test.mp4
+        """
         if path.exists():
             return f"file://{path.absolute()}"
         return None
 
 class ProgressTracker:
+    """Track and report progress for long-running operations.
+    
+    This class provides a simple interface for tracking progress updates during
+    video generation and processing operations. It supports custom callbacks
+    or falls back to logging.
+    
+    Attributes:
+        callback: Function to call with progress updates.
+        current_progress: Current progress percentage (0-100).
+        logger: Logger instance for default progress reporting.
+    
+    Examples:
+        >>> def my_callback(msg: str, pct: int):
+        ...     print(f"{msg}: {pct}%")
+        >>> tracker = ProgressTracker(callback=my_callback)
+        >>> tracker.start("Processing")
+        >>> tracker.update("Halfway", 50)
+        >>> tracker.complete("Done")
+    """
     def __init__(self, callback: Optional[Callable] = None):
+        """Initialize the progress tracker.
+        
+        Args:
+            callback: Optional callback function that receives (message, percent).
+                     If not provided, uses default logging.
+        """
         self.callback = callback or self.default_progress
         self.current_progress = 0
         self.logger = logging.getLogger(__name__)
     
     def default_progress(self, message: str, percent: int):
+        """Default progress callback that logs to the logger.
+        
+        Args:
+            message: Progress message.
+            percent: Progress percentage.
+        """
         self.logger.info(f"{message}: {percent}%")
     
     def update(self, message: str, percent: int):
+        """Update progress and trigger callback.
+        
+        Args:
+            message: Progress message to display.
+            percent: Current progress percentage (0-100).
+        """
         self.current_progress = percent
         self.callback(message, percent)
     
     def start(self, message: str = "Starting"):
+        """Mark the start of an operation (0% progress).
+        
+        Args:
+            message: Starting message, defaults to "Starting".
+        """
         self.update(message, 0)
     
     def complete(self, message: str = "Complete"):
+        """Mark the completion of an operation (100% progress).
+        
+        Args:
+            message: Completion message, defaults to "Complete".
+        """
         self.update(message, 100)
 
 class ModelConfig:
+    """Configuration and capabilities for different Veo video generation models.
+    
+    This class manages model-specific configurations and builds generation
+    configs based on model capabilities. It handles feature availability,
+    parameter validation, and safety settings.
+    
+    Attributes:
+        MODELS: Dictionary of available models and their configurations.
+    """
     MODELS = {
         "veo-3.0-fast-generate-preview": {
             "name": "Veo 3.0 Fast",
@@ -148,6 +301,19 @@ class ModelConfig:
     
     @classmethod
     def get_config(cls, model: str) -> dict:
+        """Get configuration for a specific model.
+        
+        Args:
+            model: Model identifier (with or without "models/" prefix).
+            
+        Returns:
+            dict: Model configuration dictionary containing capabilities and defaults.
+            
+        Examples:
+            >>> config = ModelConfig.get_config("veo-3.0-fast-generate-preview")
+            >>> print(config["name"])  # "Veo 3.0 Fast"
+            >>> print(config["supports_duration"])  # False
+        """
         if model.startswith("models/"):
             model = model.replace("models/", "")
         
@@ -155,6 +321,38 @@ class ModelConfig:
     
     @classmethod
     def build_generation_config(cls, model: str, **kwargs) -> types.GenerateVideosConfig:
+        """Build a generation configuration based on model capabilities.
+        
+        This method creates a GenerateVideosConfig object with parameters
+        appropriate for the specified model. It validates parameters against
+        model capabilities and handles safety settings.
+        
+        Args:
+            model: Model identifier to use for generation.
+            **kwargs: Generation parameters including:
+                - number_of_videos: Number of videos to generate (default: 1)
+                - duration_seconds: Video duration (if supported by model)
+                - enhance_prompt: Whether to enhance the prompt (if supported)
+                - fps: Frames per second (if supported)
+                - aspect_ratio: Video aspect ratio (e.g., "16:9")
+                - negative_prompt: Negative prompt for generation
+                - person_generation: Person generation setting
+                - safety_settings: List of safety settings
+                - cached_content: Cached content handle
+        
+        Returns:
+            types.GenerateVideosConfig: Configuration object for video generation.
+            
+        Raises:
+            ValueError: If aspect_ratio is not supported by the model.
+            
+        Examples:
+            >>> config = ModelConfig.build_generation_config(
+            ...     "veo-3.0-fast-generate-preview",
+            ...     number_of_videos=2,
+            ...     aspect_ratio="16:9"
+            ... )
+        """
         config = cls.get_config(model)
         
         params = {

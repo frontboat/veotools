@@ -25,8 +25,8 @@ from .stitch.seamless import (
     create_transition_points
 )
 
-from .bridge import Bridge
-from .mcp_api import (
+from .api.bridge import Bridge
+from .api.mcp_api import (
     preflight,
     version,
     list_models,
@@ -40,7 +40,7 @@ from .mcp_api import (
     cache_delete,
 )
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 __all__ = [
     "VeoClient",

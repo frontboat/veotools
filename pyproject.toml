@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "veotools"
-version = "0.1.8"
+version = "0.1.9"
 description = "A Python toolkit for AI-powered video generation and seamless stitching using Google's Veo models."
 readme = "readme.md"
 requires-python = ">=3.10"
@@ -39,11 +39,13 @@ Repository = "https://github.com/frontboat/veotools"
 Issues = "https://github.com/frontboat/veotools/issues"
 
 [tool.hatch.build]
+sources = ["src"]
 include = [
-  "veotools/**",
+  "src/veotools/**",
   "readme.md",
   "requirements.txt",
   "LICENSE",
+  "CHANGELOG.md",
 ]
 
 [tool.hatch.metadata]
@@ -51,8 +53,54 @@ allow-direct-references = true
 
 [project.optional-dependencies]
 mcp = ["mcp[cli]>=1.0.0"]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "pytest-xdist>=3.3.0",
+    "build>=1.0.0",
+    "twine>=4.0.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocs-autorefs>=0.5.0",
+]
 
 [project.scripts]
 veo = "veotools.cli:main"
-veo-mcp = "veotools.mcp_server:main"
+veo-mcp = "veotools.server.mcp_server:main"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "--capture=no",
+]
+markers = [
+    "unit: Unit tests (fast, no external dependencies)",
+    "integration: Integration tests (may use external services)",
+    "slow: Slow running tests",
+    "api: Tests that make API calls",
+    "ffmpeg: Tests that require ffmpeg",
+]
+
+[tool.coverage.run]
+source = ["src/veotools"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
 
