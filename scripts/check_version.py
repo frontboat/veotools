@@ -3,7 +3,7 @@
 
 Checks:
 - Git tag (without leading 'v') equals [project].version in pyproject.toml
-- veotools/__init__.py __version__ equals pyproject version
+- src/veotools/__init__.py __version__ equals pyproject version
 
 Usage: run in CI prior to building/publishing releases.
 """
@@ -36,7 +36,7 @@ def read_init_version(init_path: Path) -> str:
     text = init_path.read_text(encoding="utf-8")
     m = re.search(r'__version__\s*=\s*"([^"]+)"', text)
     if not m:
-        raise RuntimeError("__version__ not found in veotools/__init__.py")
+        raise RuntimeError("__version__ not found in src/veotools/__init__.py")
     return m.group(1)
 
 
@@ -48,7 +48,7 @@ def main() -> None:
 
     repo_root = Path(__file__).resolve().parents[1]
     py_version = read_pyproject_version(repo_root / "pyproject.toml")
-    init_version = read_init_version(repo_root / "veotools" / "__init__.py")
+    init_version = read_init_version(repo_root / "src" / "veotools" / "__init__.py")
 
     errors = []
     if tag_version and py_version != tag_version:
