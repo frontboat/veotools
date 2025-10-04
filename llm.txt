@@ -1,8 +1,8 @@
 # Veotools Documentation - LLM Documentation
 
-Generated: 2025-09-12T06:23:32.866828
+Generated: 2025-10-04T17:09:54.058595
 
-Version: 0.1.9
+Version: 0.1.8
 
 Python SDK and MCP server for video generation with Google Veo
 
@@ -18,7 +18,12 @@ Python SDK and MCP server for video generation with Google Veo
 - [video](#video)
 - [models](#models)
 - [__init__](#__init__)
+- [executor](#executor)
+- [scene_writer](#scene_writer)
+- [__init__](#__init__)
 - [extractor](#extractor)
+- [__init__](#__init__)
+- [daydreams](#daydreams)
 - [__init__](#__init__)
 - [mcp_server](#mcp_server)
 - [__init__](#__init__)
@@ -27,7 +32,7 @@ Python SDK and MCP server for video generation with Google Veo
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\__init__.py`
 
 Veo Tools - A toolkit for AI-powered video generation and stitching.
 
@@ -38,12 +43,12 @@ Veo Tools - A toolkit for AI-powered video generation and stitching.
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/api/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\__init__.py`
 
 
 ## bridge
 
-`/Users/boat/Projects/veotools/src/veotools/api/bridge.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\bridge.py`
 
 ### Classes
 
@@ -107,7 +112,7 @@ Examples:
 
 ## mcp_api
 
-`/Users/boat/Projects/veotools/src/veotools/api/mcp_api.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\mcp_api.py`
 
 MCP-friendly API wrappers for Veo Tools.
 
@@ -214,7 +219,8 @@ This includes API key validation, FFmpeg availability, and filesystem permission
 Returns:
     dict: JSON-serializable dictionary containing:
         - ok (bool): Overall system readiness status
-        - gemini_api_key (bool): Whether GEMINI_API_KEY is set
+        - provider (str): Active video provider identifier
+        - api_key_present (bool): Whether the current provider's API key is set
         - ffmpeg (dict): FFmpeg installation status and version info
         - write_permissions (bool): Whether output directory is writable
         - base_path (str): Absolute path to the base output directory
@@ -223,8 +229,8 @@ Examples:
     >>> status = preflight()
     >>> if not status['ok']:
     ...     print("System not ready for generation")
-    ...     if not status['gemini_api_key']:
-    ...         print("Please set GEMINI_API_KEY environment variable")
+    ...     if not status['api_key_present']:
+    ...         print("Please supply the API key for the configured provider")
     ...     if not status['ffmpeg']['installed']:
     ...         print("Please install FFmpeg for video processing")
     >>> else:
@@ -738,10 +744,29 @@ Note:
     Deletion is permanent and cannot be reversed. Ensure you no longer
     need the cached content before calling this function.
 
+#### `plan_scenes() -> Dict[str, Any]`
+
+Generate a structured Gemini-authored scene plan.
+
+Args:
+    idea: Core concept for the plan.
+    number_of_scenes: Number of clips to request.
+    character_description: Baseline character description passed to Gemini.
+    character_characteristics: Character personality notes.
+    video_type: Label for the production (e.g., vlog, trailer).
+    video_characteristics: Overall stylistic guidance.
+    camera_angle: Primary camera/perspective direction.
+    additional_context: Extra instructions for Gemini.
+    references: Optional list of character reference dicts.
+    model: Gemini model override.
+
+Returns:
+    dict: Parsed plan payload or error structure.
+
 
 ## cli
 
-`/Users/boat/Projects/veotools/src/veotools/cli.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\cli.py`
 
 Veotools command-line interface (no extra deps).
 
@@ -753,6 +778,10 @@ Usage examples:
 
 ### Functions
 
+#### `_load_references(paths: Optional[List[str]]) -> Optional[List[Dict[str, Any]]]`
+
+Load character reference JSON blobs from disk.
+
 #### `_print_progress(message: str, percent: int)`
 
 #### `cmd_preflight(_: argparse.Namespace) -> int`
@@ -760,6 +789,12 @@ Usage examples:
 #### `cmd_list_models(ns: argparse.Namespace) -> int`
 
 #### `cmd_generate(ns: argparse.Namespace) -> int`
+
+#### `cmd_plan(ns: argparse.Namespace) -> int`
+
+#### `cmd_plan_execute(ns: argparse.Namespace) -> int`
+
+#### `cmd_plan_run(ns: argparse.Namespace) -> int`
 
 #### `cmd_continue(ns: argparse.Namespace) -> int`
 
@@ -770,7 +805,7 @@ Usage examples:
 
 ## core
 
-`/Users/boat/Projects/veotools/src/veotools/core.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\core.py`
 
 ### Classes
 
@@ -802,6 +837,8 @@ Examples:
   - Initialize the GenAI client with API key from environment.
 - `client(self)`
   - Get the Google GenAI client instance.
+- `provider(self) -> str`
+  - Return the active provider identifier (google or daydreams).
 
 #### StorageManager
 
@@ -859,32 +896,27 @@ Examples:
 
 Configuration and capabilities for different Veo video generation models.
 
-This class manages model-specific configurations and builds generation
-configs based on model capabilities. It handles feature availability,
-parameter validation, and safety settings.
-
-Attributes:
-    MODELS: Dictionary of available models and their configurations.
-
 
 **Methods:**
 
+- `normalize_model(cls, model: Optional[str]) -> str`
+- `to_daydreams_model(cls, model: Optional[str]) -> Optional[str]`
+- `to_daydreams_slug(cls, model: Optional[str]) -> Optional[str]`
 - `get_config(cls, model: str) -> dict`
-  - Get configuration for a specific model.
 - `build_generation_config(cls, model: str) -> types.GenerateVideosConfig`
   - Build a generation configuration based on model capabilities.
 
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/generate/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\__init__.py`
 
 Video generation module for Veo Tools.
 
 
 ## video
 
-`/Users/boat/Projects/veotools/src/veotools/generate/video.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\video.py`
 
 Video generation functions for Veo Tools.
 
@@ -912,144 +944,33 @@ Note:
     - Veo 2.0 text mode: allows "allow_all", "allow_adult", "dont_allow"
     - Veo 2.0 image/video mode: allows "allow_adult", "dont_allow"
 
+#### `_apply_default_person_generation(model: str, mode: str, config_params: dict) -> None`
+
+Populate default person_generation for Veo 3 models when unspecified.
+
 #### `generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult`
 
-Generate a video from a text prompt using Google's Veo models.
+Generate a video from a text prompt.
 
-Creates a video from a text description using the specified Veo model. The function
-handles the entire generation pipeline including job submission, progress tracking,
-video download, and metadata extraction.
+Automatically selects the active video provider (Google GenAI or Daydreams Router)
+based on configuration. Falls back to Google behaviour when no provider override
+is specified.
 
-Args:
-    prompt: Text description of the video to generate.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    duration_seconds: Desired video duration in seconds. If None, uses model default.
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_all", "allow_adult", "dont_allow")
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-        - audio: Whether to generate audio
+#### `_generate_from_text_google(client, prompt: str) -> VideoResult`
 
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for the model/mode combination.
-    RuntimeError: If video generation fails or no video is returned.
-    FileNotFoundError: If required files are not accessible.
-
-Examples:
-    Generate a simple video:
-    >>> result = generate_from_text("A cat playing in a garden")
-    >>> print(f"Video saved to: {result.path}")
-
-    Generate with custom duration and progress tracking:
-    >>> def progress_handler(message, percent):
-    ...     print(f"{message}: {percent}%")
-    >>> result = generate_from_text(
-    ...     "A sunset over the ocean",
-    ...     duration_seconds=10,
-    ...     on_progress=progress_handler
-    ... )
+#### `_generate_from_text_daydreams(client, prompt: str) -> VideoResult`
 
 #### `generate_from_image(image_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult`
 
-Generate a video from an image and text prompt using Google's Veo models.
+Generate a video from an image seed.
 
-Creates a video animation starting from a static image, guided by a text prompt.
-The function loads the image, submits the generation job, tracks progress, and
-downloads the resulting video with metadata extraction.
-
-Args:
-    image_path: Path to the input image file (jpg, png, etc.).
-    prompt: Text description of how the image should be animated.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_adult", "dont_allow")
-        - duration_seconds: Video duration in seconds
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for image mode.
-    RuntimeError: If video generation fails or the API returns an error.
-    FileNotFoundError: If the input image file is not found.
-
-Examples:
-    Animate a static image:
-    >>> from pathlib import Path
-    >>> result = generate_from_image(
-    ...     Path("photo.jpg"),
-    ...     "The person starts walking forward"
-    ... )
-    >>> print(f"Animation saved to: {result.path}")
-
-    Generate with progress tracking:
-    >>> def show_progress(msg, pct):
-    ...     print(f"{msg}: {pct}%")
-    >>> result = generate_from_image(
-    ...     Path("landscape.png"),
-    ...     "Clouds moving across the sky",
-    ...     on_progress=show_progress
-    ... )
+#### `_generate_from_image_google(client, image_path: Path, prompt: str) -> VideoResult`
 
 #### `generate_from_video(video_path: Path, prompt: str, extract_at: float, model: str, on_progress: Optional[Callable]) -> VideoResult`
 
-Generate a video continuation from an existing video using Google's Veo models.
+Generate a video continuation from an existing clip.
 
-Creates a new video that continues from a frame extracted from an existing video.
-The function extracts a frame at the specified time offset, then uses it as the
-starting point for generating a continuation guided by the text prompt.
-
-Args:
-    video_path: Path to the input video file.
-    prompt: Text description of how the video should continue.
-    extract_at: Time offset in seconds for frame extraction. Negative values count
-        from the end (e.g., -1.0 extracts 1 second before the end). Defaults to -1.0.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_adult", "dont_allow")
-        - duration_seconds: Video duration in seconds
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for video continuation mode.
-    RuntimeError: If frame extraction fails or video generation fails.
-    FileNotFoundError: If the input video file is not found.
-
-Examples:
-    Continue a video from the end:
-    >>> result = generate_from_video(
-    ...     Path("scene1.mp4"),
-    ...     "The character turns around and walks away"
-    ... )
-
-    Continue from a specific timestamp:
-    >>> result = generate_from_video(
-    ...     Path("action.mp4"),
-    ...     "The explosion gets bigger",
-    ...     extract_at=5.5  # Extract at 5.5 seconds
-    ... )
-
-    Continue with progress tracking:
-    >>> def track_progress(msg, pct):
-    ...     print(f"Progress: {msg} ({pct}%)")
-    >>> result = generate_from_video(
-    ...     Path("dance.mp4"),
-    ...     "The dancer spins faster",
-    ...     extract_at=-2.0,
-    ...     on_progress=track_progress
-    ... )
+#### `_generate_from_video_google(client, video_path: Path, prompt: str) -> VideoResult`
 
 #### `_download_video(video: types.Video, output_path: Path, client) -> Path`
 
@@ -1079,7 +1000,7 @@ Note:
 
 ## models
 
-`/Users/boat/Projects/veotools/src/veotools/models.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\models.py`
 
 ### Classes
 
@@ -1213,14 +1134,166 @@ Examples:
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/process/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\__init__.py`
+
+Planning utilities for structuring Veo video workflows.
+
+
+## executor
+
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\executor.py`
+
+Execute scene plans into rendered videos.
+
+### Classes
+
+#### PlanExecutionResult
+
+Container for executing a :class:`ScenePlan`.
+
+Attributes:
+    plan: The validated plan that was executed.
+    clip_prompts: Prompts used for each clip in execution order.
+    clip_results: Video results returned by Veo for each clip.
+    final_result: The stitched video result, if stitching was requested.
+
+
+**Methods:**
+
+- `to_dict(self) -> Dict[str, object]`
+  - Convert execution details to a JSON-friendly dictionary.
+
+### Functions
+
+#### `_load_plan_like(plan: ScenePlan | Path | str | Dict[str, object]) -> ScenePlan`
+
+#### `_default_prompt_builder(clip: Clip) -> str`
+
+#### `execute_scene_plan(plan: ScenePlan | Path | str | Dict[str, object]) -> PlanExecutionResult`
+
+Render all clips in a scene plan and optionally stitch the results.
+
+Args:
+    plan: ScenePlan instance, dict payload, or path to plan JSON.
+    model: Default Veo model to use for clip generation.
+    prompt_builder: Optional callable to customize prompts per clip.
+    image_provider: Optional callable returning a seed image path per clip.
+    clip_options: Optional callable providing extra keyword args per clip.
+    stitch: Whether to stitch the rendered clips into a final timeline.
+    overlap: Overlap trimming in seconds when stitching.
+    auto_seed_last_frame: When True, extract a frame from each rendered clip and
+        feed it as the seed image for the next clip (unless an image_provider
+        supplies one explicitly).
+    seed_frame_offset: Time offset (seconds) used when extracting the frame
+        from each clip for auto seeding. Defaults to -0.5 (half a second from end).
+    on_progress: Optional progress callback used for generation and stitching.
+
+Returns:
+    PlanExecutionResult containing individual clip results and optional final video.
+
+
+## scene_writer
+
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\scene_writer.py`
+
+Scene planning helpers powered by Gemini.
+
+### Classes
+
+#### Shot
+
+Technical camera details for a specific clip.
+
+
+#### Subject
+
+Describes the character's appearance and wardrobe within a specific clip.
+
+
+#### Scene
+
+Describes the setting and environment of the clip.
+
+
+#### VisualDetails
+
+Actions and props within the clip.
+
+
+#### Cinematography
+
+Lighting, tone, and colour direction for the clip.
+
+
+#### AudioTrack
+
+Defines the sound elements specific to this clip.
+
+
+#### Dialogue
+
+Defines the spoken lines and how they are presented.
+
+
+#### Performance
+
+Controls for the character's animated performance in this clip.
+
+
+#### Clip
+
+Defines a single video segment or shot.
+
+
+#### CharacterProfile
+
+A detailed, consistent profile of the character's core attributes.
+
+
+#### ScenePlan
+
+Structured response containing characters and clips.
+
+
+**Methods:**
+
+- `model_dump_json(self) -> str`
+  - Provide JSON serialisation helper that matches BaseModel signature.
+
+#### SceneWriter
+
+High-level helper for generating structured scene plans.
+
+
+**Methods:**
+
+- `__init__(self, model: str)`
+- `_build_prompt_sections() -> tuple[str, str]`
+- `generate(self, idea: str) -> ScenePlan`
+  - Generate a structured scene plan from a high-level idea.
+- `_generate_plan_google(self, prompt: str, request_config: types.GenerateContentConfig, model: str) -> str`
+- `_generate_plan_daydreams(self, prompt: str, schema: Dict[str, object], model: str) -> str`
+- `_strip_code_fence(text: str) -> str`
+- `_coerce_video_prompts(prompts: Sequence[Dict[str, Any]]) -> Dict[str, Any]`
+- `_normalize_chat_model(model: str) -> str`
+
+### Functions
+
+#### `generate_scene_plan(idea: str) -> ScenePlan`
+
+Convenience wrapper around :class:`SceneWriter` for one-off calls.
+
+
+## __init__
+
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\process\__init__.py`
 
 Video processing module for Veo Tools.
 
 
 ## extractor
 
-`/Users/boat/Projects/veotools/src/veotools/process/extractor.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\process\extractor.py`
 
 Frame extraction and video info utilities for Veo Tools.
 
@@ -1358,12 +1431,44 @@ Note:
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/server/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\__init__.py`
+
+Provider integration helpers for Veotools.
+
+
+## daydreams
+
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\daydreams.py`
+
+Daydreams Router API client helpers.
+
+### Classes
+
+#### DaydreamsRouterClient
+
+Lightweight wrapper around the Daydreams Router REST API.
+
+
+**Methods:**
+
+- `__init__(self) -> None`
+- `_url(self, path: str) -> str`
+- `submit_video_job(self, model: str, payload: Dict[str, Any]) -> Dict[str, Any]`
+- `get_video_job(self, job_id: str) -> Dict[str, Any]`
+- `fetch_job_status(self, status_url: str) -> Dict[str, Any]`
+- `list_models(self) -> Dict[str, Any]`
+- `download_asset(self, asset_url: str, output_path) -> None`
+- `create_chat_completion(self, payload: Dict[str, Any]) -> Dict[str, Any]`
+
+
+## __init__
+
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\server\__init__.py`
 
 
 ## mcp_server
 
-`/Users/boat/Projects/veotools/src/veotools/server/mcp_server.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\server\mcp_server.py`
 
 Built-in MCP server entry point for Veotools.
 
@@ -1377,7 +1482,7 @@ Run:
 
 Check environment and system prerequisites.
 
-Returns a JSON dict with: ok, gemini_api_key, ffmpeg {installed, version},
+Returns a JSON dict with: ok, provider, api_key_present, ffmpeg {installed, version},
 write_permissions, base_path.
 
 #### `version() -> dict`
@@ -1415,6 +1520,10 @@ Update TTL or expiry time for a cache.
 
 Delete a cached content entry by name.
 
+#### `plan_scenes(idea: str, number_of_scenes: int, character_description: str | None, character_characteristics: str | None, video_type: str | None, video_characteristics: str | None, camera_angle: str | None, additional_context: str | None, model: str | None) -> dict`
+
+Generate a structured Gemini-authored scene plan.
+
 #### `generate_start(prompt: str, model: Optional[str], input_image_path: Optional[str], input_video_path: Optional[str], extract_at: Optional[float], options: Optional[Dict]) -> dict`
 
 Start a video generation job.
@@ -1448,43 +1557,47 @@ Retrieve the persisted job record by id.
 
 ## __init__
 
-`/Users/boat/Projects/veotools/src/veotools/stitch/__init__.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\__init__.py`
 
 Video stitching module for Veo Tools.
 
 
 ## seamless
 
-`/Users/boat/Projects/veotools/src/veotools/stitch/seamless.py`
+`C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\seamless.py`
 
 Seamless video stitching for Veo Tools.
 
 ### Functions
 
+#### `_has_audio(video_path: Path) -> bool`
+
+Return True if the media file contains an audio stream.
+
 #### `stitch_videos(video_paths: List[Path], overlap: float, output_path: Optional[Path], on_progress: Optional[Callable]) -> VideoResult`
 
-Seamlessly stitch multiple videos together into a single continuous video.
+Seamlessly stitch multiple videos (with audio) into a single timeline.
 
-Combines multiple video files into one continuous video by concatenating them
-with optional overlap trimming. All videos are resized to match the dimensions
-of the first video. The output is optimized with H.264 encoding for broad
-compatibility.
+Uses FFmpeg to concatenate videos while optionally trimming an overlap from
+the tail of each clip (except the last) to create smoother scene transitions.
+Both audio and video streams are preserved and re-encoded into a single
+H.264/AAC MP4.
 
 Args:
     video_paths: List of paths to video files to stitch together, in order.
     overlap: Duration in seconds to trim from the end of each video (except
         the last one) to create smooth transitions. Defaults to 1.0.
     output_path: Optional custom output path. If None, auto-generates a path
-        using StorageManager.
+        using :class:`StorageManager`.
     on_progress: Optional callback function called with progress updates (message, percent).
 
 Returns:
     VideoResult: Object containing the stitched video path, metadata, and operation details.
 
 Raises:
-    ValueError: If no videos are provided or if fewer than 2 videos are found.
+    ValueError: If fewer than two videos are provided.
     FileNotFoundError: If any input video file doesn't exist.
-    RuntimeError: If video processing fails.
+    RuntimeError: If FFmpeg fails to stitch the videos.
 
 Examples:
     Stitch videos with default overlap:

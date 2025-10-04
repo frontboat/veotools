@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Veotools Documentation" version="0.1.9">
+<project name="Veotools Documentation" version="0.1.8">
   <description>Python SDK and MCP server for video generation with Google Veo</description>
-  <generated>2025-09-12T06:23:32.866980</generated>
+  <generated>2025-10-04T17:09:54.058595</generated>
   <modules>
-    <module path="/Users/boat/Projects/veotools/src/veotools/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\__init__.py">
       <docstring><![CDATA[Veo Tools - A toolkit for AI-powered video generation and stitching.]]></docstring>
-      <function name="init" signature="init(api_key: str, log_level: str)" line="78">
+      <function name="init" signature="init(api_key: str, log_level: str)" line="96">
       </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/api/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\__init__.py">
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/api/bridge.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\bridge.py">
       <class name="Bridge" line="9">
         <docstring><![CDATA[A fluent API bridge for chaining video generation and processing operations.
 
@@ -261,7 +261,7 @@ Examples:
         </methods>
       </class>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/api/mcp_api.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\mcp_api.py">
       <docstring><![CDATA[MCP-friendly API wrappers for Veo Tools.
 
 This module exposes small, deterministic, JSON-first functions intended for
@@ -283,13 +283,13 @@ Design notes:
 - A background thread runs the blocking generation call and updates job state
   via the JobStore. Cancellation is cooperative: the on_progress callback
   checks a cancel flag in the persisted job state and raises Cancelled.]]></docstring>
-      <class name="Cancelled" line="50">
+      <class name="Cancelled" line="51">
         <docstring><![CDATA[Exception raised to signal cooperative cancellation of a generation job.
 
 This exception is raised internally when a job's cancel_requested flag is set
 to True, allowing for graceful termination of long-running operations.]]></docstring>
       </class>
-      <class name="JobRecord" line="77">
+      <class name="JobRecord" line="78">
         <docstring><![CDATA[Data class representing a generation job's state and metadata.
 
 Stores all information about a generation job including status, progress,
@@ -319,7 +319,7 @@ Returns:
           </method>
         </methods>
       </class>
-      <class name="JobStore" line="122">
+      <class name="JobStore" line="123">
         <docstring><![CDATA[File-based persistence layer for generation jobs.
 
 Manages storage and retrieval of job records using JSON files in the
@@ -396,7 +396,7 @@ Raises:
           </method>
         </methods>
       </class>
-      <function name="preflight" signature="preflight() -> Dict[str, Any]" line="233">
+      <function name="preflight" signature="preflight() -> Dict[str, Any]" line="234">
         <docstring><![CDATA[Check environment and system prerequisites for video generation.
 
 Performs comprehensive system checks to ensure all required dependencies
@@ -406,7 +406,8 @@ This includes API key validation, FFmpeg availability, and filesystem permission
 Returns:
     dict: JSON-serializable dictionary containing:
         - ok (bool): Overall system readiness status
-        - gemini_api_key (bool): Whether GEMINI_API_KEY is set
+        - provider (str): Active video provider identifier
+        - api_key_present (bool): Whether the current provider's API key is set
         - ffmpeg (dict): FFmpeg installation status and version info
         - write_permissions (bool): Whether output directory is writable
         - base_path (str): Absolute path to the base output directory
@@ -415,8 +416,8 @@ Examples:
     >>> status = preflight()
     >>> if not status['ok']:
     ...     print("System not ready for generation")
-    ...     if not status['gemini_api_key']:
-    ...         print("Please set GEMINI_API_KEY environment variable")
+    ...     if not status['api_key_present']:
+    ...         print("Please supply the API key for the configured provider")
     ...     if not status['ffmpeg']['installed']:
     ...         print("Please install FFmpeg for video processing")
     >>> else:
@@ -426,7 +427,7 @@ Note:
     This function is designed to be called before starting any video generation
     operations to ensure the environment is properly configured.]]></docstring>
       </function>
-      <function name="version" signature="version() -> Dict[str, Any]" line="305">
+      <function name="version" signature="version() -> Dict[str, Any]" line="312">
         <docstring><![CDATA[Report package and dependency versions in a JSON-friendly format.
 
 Collects version information for veotools and its key dependencies,
@@ -456,7 +457,7 @@ Note:
     Returns None for any package that cannot be found or queried.
     This is expected behavior and not an error condition.]]></docstring>
       </function>
-      <function name="_build_job" signature="_build_job(kind: str, params: Dict[str, Any]) -> JobRecord" line="372">
+      <function name="_build_job" signature="_build_job(kind: str, params: Dict[str, Any]) -> JobRecord" line="379">
         <docstring><![CDATA[Create a new job record with initial values.
 
 Args:
@@ -466,7 +467,7 @@ Args:
 Returns:
     JobRecord: New job record with unique ID and initial status.]]></docstring>
       </function>
-      <function name="_validate_generate_inputs" signature="_validate_generate_inputs(params: Dict[str, Any]) -> None" line="396">
+      <function name="_validate_generate_inputs" signature="_validate_generate_inputs(params: Dict[str, Any]) -> None" line="403">
         <docstring><![CDATA[Validate generation parameters for consistency and file existence.
 
 Args:
@@ -476,7 +477,7 @@ Raises:
     ValueError: If prompt is missing/invalid or multiple input types specified.
     FileNotFoundError: If specified input files don't exist.]]></docstring>
       </function>
-      <function name="generate_start" signature="generate_start(params: Dict[str, Any]) -> Dict[str, Any]" line="423">
+      <function name="generate_start" signature="generate_start(params: Dict[str, Any]) -> Dict[str, Any]" line="430">
         <docstring><![CDATA[Start a video generation job and return immediately with job details.
 
 Initiates a video generation job in the background and returns immediately
@@ -534,7 +535,7 @@ Note:
     The job runs in a background thread. Use generate_get() to check
     progress and retrieve results when complete.]]></docstring>
       </function>
-      <function name="generate_get" signature="generate_get(job_id: str) -> Dict[str, Any]" line="517">
+      <function name="generate_get" signature="generate_get(job_id: str) -> Dict[str, Any]" line="524">
         <docstring><![CDATA[Get the current status and results of a generation job.
 
 Retrieves the current state of a generation job including progress,
@@ -590,7 +591,7 @@ Examples:
     ... else:
     ...     print(f"Still processing: {status['progress']}%")]]></docstring>
       </function>
-      <function name="generate_cancel" signature="generate_cancel(job_id: str) -> Dict[str, Any]" line="596">
+      <function name="generate_cancel" signature="generate_cancel(job_id: str) -> Dict[str, Any]" line="603">
         <docstring><![CDATA[Request cancellation of a running generation job.
 
 Attempts to cancel a generation job that is currently processing.
@@ -628,7 +629,7 @@ Note:
     Cancellation may not be immediate - the job will stop at the next
     progress checkpoint. Monitor with generate_get() to confirm cancellation.]]></docstring>
       </function>
-      <function name="_run_generation" signature="_run_generation(job_id: str) -> None" line="642">
+      <function name="_run_generation" signature="_run_generation(job_id: str) -> None" line="649">
         <docstring><![CDATA[Background worker function that runs the actual generation process.
 
 This function runs in a separate thread and handles the entire generation
@@ -642,7 +643,7 @@ Note:
     This is an internal function called by the background thread system.
     It should not be called directly.]]></docstring>
       </function>
-      <function name="_sanitize_result" signature="_sanitize_result(result: Dict[str, Any]) -> Dict[str, Any]" line="723">
+      <function name="_sanitize_result" signature="_sanitize_result(result: Dict[str, Any]) -> Dict[str, Any]" line="730">
         <docstring><![CDATA[Ensure result dictionary is JSON-serializable with proper types.
 
 Args:
@@ -651,7 +652,7 @@ Args:
 Returns:
     dict: Sanitized result with Path objects converted to strings.]]></docstring>
       </function>
-      <function name="list_models" signature="list_models(include_remote: bool) -> Dict[str, Any]" line="763">
+      <function name="list_models" signature="list_models(include_remote: bool) -> Dict[str, Any]" line="771">
         <docstring><![CDATA[List available video generation models with their capabilities.
 
 Retrieves information about available Veo models including their capabilities,
@@ -701,7 +702,7 @@ Note:
     Results are cached for 10 minutes to improve performance. Remote model
     discovery failures are silently ignored - static registry is always available.]]></docstring>
       </function>
-      <function name="cache_create_from_files" signature="cache_create_from_files(model: str, files: list[str], system_instruction: Optional[str]) -> Dict[str, Any]" line="883">
+      <function name="cache_create_from_files" signature="cache_create_from_files(model: str, files: list[str], system_instruction: Optional[str]) -> Dict[str, Any]" line="913">
         <docstring><![CDATA[Create a cached content handle from local file paths.
 
 Uploads local files to create a cached content context that can be reused
@@ -752,7 +753,7 @@ Note:
     Ensure you have appropriate permissions for the files and comply with
     Google's usage policies.]]></docstring>
       </function>
-      <function name="cache_get" signature="cache_get(name: str) -> Dict[str, Any]" line="961">
+      <function name="cache_get" signature="cache_get(name: str) -> Dict[str, Any]" line="994">
         <docstring><![CDATA[Retrieve cached content metadata by cache name.
 
 Fetches information about a previously created cached content entry,
@@ -786,7 +787,7 @@ Note:
     Available metadata fields may vary depending on the Google GenAI
     library version and cache configuration.]]></docstring>
       </function>
-      <function name="cache_list" signature="cache_list() -> Dict[str, Any]" line="1013">
+      <function name="cache_list" signature="cache_list() -> Dict[str, Any]" line="1049">
         <docstring><![CDATA[List all cached content entries with their metadata.
 
 Retrieves a list of all cached content entries accessible to the current
@@ -832,7 +833,7 @@ Note:
     Metadata availability depends on the Google GenAI library version
     and individual cache configurations.]]></docstring>
       </function>
-      <function name="cache_update" signature="cache_update(name: str, ttl_seconds: Optional[int], expire_time_iso: Optional[str]) -> Dict[str, Any]" line="1078">
+      <function name="cache_update" signature="cache_update(name: str, ttl_seconds: Optional[int], expire_time_iso: Optional[str]) -> Dict[str, Any]" line="1117">
         <docstring><![CDATA[Update TTL or expiration time for a cached content entry.
 
 Modifies the lifecycle settings of an existing cached content entry.
@@ -881,7 +882,7 @@ Note:
     - TTL is relative to the current time when the update is processed
     - expire_time_iso should be in UTC timezone for consistency]]></docstring>
       </function>
-      <function name="cache_delete" signature="cache_delete(name: str) -> Dict[str, Any]" line="1155">
+      <function name="cache_delete" signature="cache_delete(name: str) -> Dict[str, Any]" line="1197">
         <docstring><![CDATA[Delete a cached content entry by name.
 
 Permanently removes a cached content entry and all associated files
@@ -916,8 +917,26 @@ Note:
     Deletion is permanent and cannot be reversed. Ensure you no longer
     need the cached content before calling this function.]]></docstring>
       </function>
+      <function name="plan_scenes" signature="plan_scenes() -> Dict[str, Any]" line="1244">
+        <docstring><![CDATA[Generate a structured Gemini-authored scene plan.
+
+Args:
+    idea: Core concept for the plan.
+    number_of_scenes: Number of clips to request.
+    character_description: Baseline character description passed to Gemini.
+    character_characteristics: Character personality notes.
+    video_type: Label for the production (e.g., vlog, trailer).
+    video_characteristics: Overall stylistic guidance.
+    camera_angle: Primary camera/perspective direction.
+    additional_context: Extra instructions for Gemini.
+    references: Optional list of character reference dicts.
+    model: Gemini model override.
+
+Returns:
+    dict: Parsed plan payload or error structure.]]></docstring>
+      </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/cli.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\cli.py">
       <docstring><![CDATA[Veotools command-line interface (no extra deps).
 
 Usage examples:
@@ -925,23 +944,32 @@ Usage examples:
   veo list-models --remote
   veo generate --prompt "cat riding a hat" --model veo-3.0-fast-generate-preview
   veo continue --video dog.mp4 --prompt "the dog finds a treasure chest" --overlap 1.0]]></docstring>
-      <function name="_print_progress" signature="_print_progress(message: str, percent: int)" line="20">
+      <function name="_load_references" signature="_load_references(paths: Optional[List[str]]) -> Optional[List[Dict[str, Any]]]" line="20">
+        <docstring><![CDATA[Load character reference JSON blobs from disk.]]></docstring>
       </function>
-      <function name="cmd_preflight" signature="cmd_preflight(_: argparse.Namespace) -> int" line="29">
+      <function name="_print_progress" signature="_print_progress(message: str, percent: int)" line="39">
       </function>
-      <function name="cmd_list_models" signature="cmd_list_models(ns: argparse.Namespace) -> int" line="36">
+      <function name="cmd_preflight" signature="cmd_preflight(_: argparse.Namespace) -> int" line="48">
       </function>
-      <function name="cmd_generate" signature="cmd_generate(ns: argparse.Namespace) -> int" line="47">
+      <function name="cmd_list_models" signature="cmd_list_models(ns: argparse.Namespace) -> int" line="55">
       </function>
-      <function name="cmd_continue" signature="cmd_continue(ns: argparse.Namespace) -> int" line="95">
+      <function name="cmd_generate" signature="cmd_generate(ns: argparse.Namespace) -> int" line="66">
       </function>
-      <function name="build_parser" signature="build_parser() -> argparse.ArgumentParser" line="136">
+      <function name="cmd_plan" signature="cmd_plan(ns: argparse.Namespace) -> int" line="114">
       </function>
-      <function name="main" signature="main(argv: Optional[list[str]]) -> int" line="179">
+      <function name="cmd_plan_execute" signature="cmd_plan_execute(ns: argparse.Namespace) -> int" line="151">
+      </function>
+      <function name="cmd_plan_run" signature="cmd_plan_run(ns: argparse.Namespace) -> int" line="174">
+      </function>
+      <function name="cmd_continue" signature="cmd_continue(ns: argparse.Namespace) -> int" line="229">
+      </function>
+      <function name="build_parser" signature="build_parser() -> argparse.ArgumentParser" line="270">
+      </function>
+      <function name="main" signature="main(argv: Optional[list[str]]) -> int" line="378">
       </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/core.py">
-      <class name="VeoClient" line="11">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\core.py">
+      <class name="VeoClient" line="13">
         <docstring><![CDATA[Singleton client for Google GenAI API interactions.
 
 This class implements a singleton pattern to ensure only one client instance
@@ -979,9 +1007,12 @@ Raises:
 Returns:
     genai.Client: The initialized GenAI client.]]></docstring>
           </method>
+          <method name="provider" signature="provider(self) -> str">
+            <docstring><![CDATA[Return the active provider identifier (google or daydreams).]]></docstring>
+          </method>
         </methods>
       </class>
-      <class name="StorageManager" line="65">
+      <class name="StorageManager" line="87">
         <methods>
           <method name="__init__" signature="__init__(self, base_path: Optional[str])">
             <docstring><![CDATA[Manage output directories for videos, frames, and temp files.
@@ -1061,7 +1092,7 @@ Examples:
           </method>
         </methods>
       </class>
-      <class name="ProgressTracker" line="193">
+      <class name="ProgressTracker" line="215">
         <docstring><![CDATA[Track and report progress for long-running operations.
 
 This class provides a simple interface for tracking progress updates during
@@ -1116,72 +1147,29 @@ Args:
           </method>
         </methods>
       </class>
-      <class name="ModelConfig" line="259">
-        <docstring><![CDATA[Configuration and capabilities for different Veo video generation models.
-
-This class manages model-specific configurations and builds generation
-configs based on model capabilities. It handles feature availability,
-parameter validation, and safety settings.
-
-Attributes:
-    MODELS: Dictionary of available models and their configurations.]]></docstring>
+      <class name="ModelConfig" line="281">
+        <docstring><![CDATA[Configuration and capabilities for different Veo video generation models.]]></docstring>
         <methods>
+          <method name="normalize_model" signature="normalize_model(cls, model: Optional[str]) -> str">
+          </method>
+          <method name="to_daydreams_model" signature="to_daydreams_model(cls, model: Optional[str]) -> Optional[str]">
+          </method>
+          <method name="to_daydreams_slug" signature="to_daydreams_slug(cls, model: Optional[str]) -> Optional[str]">
+          </method>
           <method name="get_config" signature="get_config(cls, model: str) -> dict">
-            <docstring><![CDATA[Get configuration for a specific model.
-
-Args:
-    model: Model identifier (with or without "models/" prefix).
-    
-Returns:
-    dict: Model configuration dictionary containing capabilities and defaults.
-    
-Examples:
-    >>> config = ModelConfig.get_config("veo-3.0-fast-generate-preview")
-    >>> print(config["name"])  # "Veo 3.0 Fast"
-    >>> print(config["supports_duration"])  # False]]></docstring>
           </method>
           <method name="build_generation_config" signature="build_generation_config(cls, model: str) -> types.GenerateVideosConfig">
-            <docstring><![CDATA[Build a generation configuration based on model capabilities.
-
-This method creates a GenerateVideosConfig object with parameters
-appropriate for the specified model. It validates parameters against
-model capabilities and handles safety settings.
-
-Args:
-    model: Model identifier to use for generation.
-    **kwargs: Generation parameters including:
-        - number_of_videos: Number of videos to generate (default: 1)
-        - duration_seconds: Video duration (if supported by model)
-        - enhance_prompt: Whether to enhance the prompt (if supported)
-        - fps: Frames per second (if supported)
-        - aspect_ratio: Video aspect ratio (e.g., "16:9")
-        - negative_prompt: Negative prompt for generation
-        - person_generation: Person generation setting
-        - safety_settings: List of safety settings
-        - cached_content: Cached content handle
-
-Returns:
-    types.GenerateVideosConfig: Configuration object for video generation.
-    
-Raises:
-    ValueError: If aspect_ratio is not supported by the model.
-    
-Examples:
-    >>> config = ModelConfig.build_generation_config(
-    ...     "veo-3.0-fast-generate-preview",
-    ...     number_of_videos=2,
-    ...     aspect_ratio="16:9"
-    ... )]]></docstring>
+            <docstring><![CDATA[Build a generation configuration based on model capabilities.]]></docstring>
           </method>
         </methods>
       </class>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/generate/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\__init__.py">
       <docstring><![CDATA[Video generation module for Veo Tools.]]></docstring>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/generate/video.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\video.py">
       <docstring><![CDATA[Video generation functions for Veo Tools.]]></docstring>
-      <function name="_validate_person_generation" signature="_validate_person_generation(model: str, mode: str, person_generation: Optional[str]) -> None" line="15">
+      <function name="_validate_person_generation" signature="_validate_person_generation(model: str, mode: str, person_generation: Optional[str]) -> None" line="16">
         <docstring><![CDATA[Validate person_generation parameter based on model and generation mode.
 
 Validates the person_generation parameter against the constraints defined for different
@@ -1202,143 +1190,31 @@ Note:
     - Veo 2.0 text mode: allows "allow_all", "allow_adult", "dont_allow"
     - Veo 2.0 image/video mode: allows "allow_adult", "dont_allow"]]></docstring>
       </function>
-      <function name="generate_from_text" signature="generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult" line="57">
-        <docstring><![CDATA[Generate a video from a text prompt using Google's Veo models.
-
-Creates a video from a text description using the specified Veo model. The function
-handles the entire generation pipeline including job submission, progress tracking,
-video download, and metadata extraction.
-
-Args:
-    prompt: Text description of the video to generate.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    duration_seconds: Desired video duration in seconds. If None, uses model default.
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_all", "allow_adult", "dont_allow")
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-        - audio: Whether to generate audio
-
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for the model/mode combination.
-    RuntimeError: If video generation fails or no video is returned.
-    FileNotFoundError: If required files are not accessible.
-
-Examples:
-    Generate a simple video:
-    >>> result = generate_from_text("A cat playing in a garden")
-    >>> print(f"Video saved to: {result.path}")
-
-    Generate with custom duration and progress tracking:
-    >>> def progress_handler(message, percent):
-    ...     print(f"{message}: {percent}%")
-    >>> result = generate_from_text(
-    ...     "A sunset over the ocean",
-    ...     duration_seconds=10,
-    ...     on_progress=progress_handler
-    ... )]]></docstring>
+      <function name="_apply_default_person_generation" signature="_apply_default_person_generation(model: str, mode: str, config_params: dict) -> None" line="59">
+        <docstring><![CDATA[Populate default person_generation for Veo 3 models when unspecified.]]></docstring>
       </function>
-      <function name="generate_from_image" signature="generate_from_image(image_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="188">
-        <docstring><![CDATA[Generate a video from an image and text prompt using Google's Veo models.
+      <function name="generate_from_text" signature="generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult" line="76">
+        <docstring><![CDATA[Generate a video from a text prompt.
 
-Creates a video animation starting from a static image, guided by a text prompt.
-The function loads the image, submits the generation job, tracks progress, and
-downloads the resulting video with metadata extraction.
-
-Args:
-    image_path: Path to the input image file (jpg, png, etc.).
-    prompt: Text description of how the image should be animated.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_adult", "dont_allow")
-        - duration_seconds: Video duration in seconds
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for image mode.
-    RuntimeError: If video generation fails or the API returns an error.
-    FileNotFoundError: If the input image file is not found.
-
-Examples:
-    Animate a static image:
-    >>> from pathlib import Path
-    >>> result = generate_from_image(
-    ...     Path("photo.jpg"),
-    ...     "The person starts walking forward"
-    ... )
-    >>> print(f"Animation saved to: {result.path}")
-
-    Generate with progress tracking:
-    >>> def show_progress(msg, pct):
-    ...     print(f"{msg}: {pct}%")
-    >>> result = generate_from_image(
-    ...     Path("landscape.png"),
-    ...     "Clouds moving across the sky",
-    ...     on_progress=show_progress
-    ... )]]></docstring>
+Automatically selects the active video provider (Google GenAI or Daydreams Router)
+based on configuration. Falls back to Google behaviour when no provider override
+is specified.]]></docstring>
       </function>
-      <function name="generate_from_video" signature="generate_from_video(video_path: Path, prompt: str, extract_at: float, model: str, on_progress: Optional[Callable]) -> VideoResult" line="333">
-        <docstring><![CDATA[Generate a video continuation from an existing video using Google's Veo models.
-
-Creates a new video that continues from a frame extracted from an existing video.
-The function extracts a frame at the specified time offset, then uses it as the
-starting point for generating a continuation guided by the text prompt.
-
-Args:
-    video_path: Path to the input video file.
-    prompt: Text description of how the video should continue.
-    extract_at: Time offset in seconds for frame extraction. Negative values count
-        from the end (e.g., -1.0 extracts 1 second before the end). Defaults to -1.0.
-    model: Veo model to use for generation. Defaults to "veo-3.0-fast-generate-preview".
-    on_progress: Optional callback function called with progress updates (message, percent).
-    **kwargs: Additional generation parameters including:
-        - person_generation: Person generation policy ("allow_adult", "dont_allow")
-        - duration_seconds: Video duration in seconds
-        - enhance: Whether to enhance the prompt
-        - fps: Target frames per second
-
-Returns:
-    VideoResult: Object containing the generated video path, metadata, and operation details.
-
-Raises:
-    ValueError: If person_generation parameter is invalid for video continuation mode.
-    RuntimeError: If frame extraction fails or video generation fails.
-    FileNotFoundError: If the input video file is not found.
-
-Examples:
-    Continue a video from the end:
-    >>> result = generate_from_video(
-    ...     Path("scene1.mp4"),
-    ...     "The character turns around and walks away"
-    ... )
-
-    Continue from a specific timestamp:
-    >>> result = generate_from_video(
-    ...     Path("action.mp4"),
-    ...     "The explosion gets bigger",
-    ...     extract_at=5.5  # Extract at 5.5 seconds
-    ... )
-
-    Continue with progress tracking:
-    >>> def track_progress(msg, pct):
-    ...     print(f"Progress: {msg} ({pct}%)")
-    >>> result = generate_from_video(
-    ...     Path("dance.mp4"),
-    ...     "The dancer spins faster",
-    ...     extract_at=-2.0,
-    ...     on_progress=track_progress
-    ... )]]></docstring>
+      <function name="_generate_from_text_google" signature="_generate_from_text_google(client, prompt: str) -> VideoResult" line="111">
       </function>
-      <function name="_download_video" signature="_download_video(video: types.Video, output_path: Path, client) -> Path" line="422">
+      <function name="_generate_from_text_daydreams" signature="_generate_from_text_daydreams(client, prompt: str) -> VideoResult" line="200">
+      </function>
+      <function name="generate_from_image" signature="generate_from_image(image_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="374">
+        <docstring><![CDATA[Generate a video from an image seed.]]></docstring>
+      </function>
+      <function name="_generate_from_image_google" signature="_generate_from_image_google(client, image_path: Path, prompt: str) -> VideoResult" line="399">
+      </function>
+      <function name="generate_from_video" signature="generate_from_video(video_path: Path, prompt: str, extract_at: float, model: str, on_progress: Optional[Callable]) -> VideoResult" line="498">
+        <docstring><![CDATA[Generate a video continuation from an existing clip.]]></docstring>
+      </function>
+      <function name="_generate_from_video_google" signature="_generate_from_video_google(client, video_path: Path, prompt: str) -> VideoResult" line="525">
+      </function>
+      <function name="_download_video" signature="_download_video(video: types.Video, output_path: Path, client) -> Path" line="626">
         <docstring><![CDATA[Download a generated video from Google's API to local storage.
 
 Downloads video content from either a URI or direct data blob provided by the
@@ -1363,7 +1239,7 @@ Note:
     for URI-based downloads.]]></docstring>
       </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/models.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\models.py">
       <class name="JobStatus" line="7">
         <docstring><![CDATA[Enumeration of possible job statuses for video generation tasks.
 
@@ -1550,10 +1426,139 @@ Examples:
         </methods>
       </class>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/process/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\__init__.py">
+      <docstring><![CDATA[Planning utilities for structuring Veo video workflows.]]></docstring>
+    </module>
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\executor.py">
+      <docstring><![CDATA[Execute scene plans into rendered videos.]]></docstring>
+      <class name="PlanExecutionResult" line="23">
+        <docstring><![CDATA[Container for executing a :class:`ScenePlan`.
+
+Attributes:
+    plan: The validated plan that was executed.
+    clip_prompts: Prompts used for each clip in execution order.
+    clip_results: Video results returned by Veo for each clip.
+    final_result: The stitched video result, if stitching was requested.]]></docstring>
+        <methods>
+          <method name="to_dict" signature="to_dict(self) -> Dict[str, object]">
+            <docstring><![CDATA[Convert execution details to a JSON-friendly dictionary.]]></docstring>
+          </method>
+        </methods>
+      </class>
+      <function name="_load_plan_like" signature="_load_plan_like(plan: ScenePlan | Path | str | Dict[str, object]) -> ScenePlan" line="53">
+      </function>
+      <function name="_default_prompt_builder" signature="_default_prompt_builder(clip: Clip) -> str" line="65">
+      </function>
+      <function name="execute_scene_plan" signature="execute_scene_plan(plan: ScenePlan | Path | str | Dict[str, object]) -> PlanExecutionResult" line="106">
+        <docstring><![CDATA[Render all clips in a scene plan and optionally stitch the results.
+
+Args:
+    plan: ScenePlan instance, dict payload, or path to plan JSON.
+    model: Default Veo model to use for clip generation.
+    prompt_builder: Optional callable to customize prompts per clip.
+    image_provider: Optional callable returning a seed image path per clip.
+    clip_options: Optional callable providing extra keyword args per clip.
+    stitch: Whether to stitch the rendered clips into a final timeline.
+    overlap: Overlap trimming in seconds when stitching.
+    auto_seed_last_frame: When True, extract a frame from each rendered clip and
+        feed it as the seed image for the next clip (unless an image_provider
+        supplies one explicitly).
+    seed_frame_offset: Time offset (seconds) used when extracting the frame
+        from each clip for auto seeding. Defaults to -0.5 (half a second from end).
+    on_progress: Optional progress callback used for generation and stitching.
+
+Returns:
+    PlanExecutionResult containing individual clip results and optional final video.]]></docstring>
+      </function>
+    </module>
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\scene_writer.py">
+      <docstring><![CDATA[Scene planning helpers powered by Gemini.]]></docstring>
+      <class name="Shot" line="16">
+        <docstring><![CDATA[Technical camera details for a specific clip.]]></docstring>
+      </class>
+      <class name="Subject" line="32">
+        <docstring><![CDATA[Describes the character's appearance and wardrobe within a specific clip.]]></docstring>
+      </class>
+      <class name="Scene" line="43">
+        <docstring><![CDATA[Describes the setting and environment of the clip.]]></docstring>
+      </class>
+      <class name="VisualDetails" line="55">
+        <docstring><![CDATA[Actions and props within the clip.]]></docstring>
+      </class>
+      <class name="Cinematography" line="62">
+        <docstring><![CDATA[Lighting, tone, and colour direction for the clip.]]></docstring>
+      </class>
+      <class name="AudioTrack" line="71">
+        <docstring><![CDATA[Defines the sound elements specific to this clip.]]></docstring>
+      </class>
+      <class name="Dialogue" line="90">
+        <docstring><![CDATA[Defines the spoken lines and how they are presented.]]></docstring>
+      </class>
+      <class name="Performance" line="100">
+        <docstring><![CDATA[Controls for the character's animated performance in this clip.]]></docstring>
+      </class>
+      <class name="Clip" line="111">
+        <docstring><![CDATA[Defines a single video segment or shot.]]></docstring>
+      </class>
+      <class name="CharacterProfile" line="129">
+        <docstring><![CDATA[A detailed, consistent profile of the character's core attributes.]]></docstring>
+      </class>
+      <class name="ScenePlan" line="152">
+        <docstring><![CDATA[Structured response containing characters and clips.]]></docstring>
+        <methods>
+          <method name="model_dump_json" signature="model_dump_json(self) -> str">
+            <docstring><![CDATA[Provide JSON serialisation helper that matches BaseModel signature.]]></docstring>
+          </method>
+        </methods>
+      </class>
+      <class name="SceneWriter" line="183">
+        <docstring><![CDATA[High-level helper for generating structured scene plans.]]></docstring>
+        <methods>
+          <method name="__init__" signature="__init__(self, model: str)">
+          </method>
+          <method name="_build_prompt_sections" signature="_build_prompt_sections() -> tuple[str, str]">
+          </method>
+          <method name="generate" signature="generate(self, idea: str) -> ScenePlan">
+            <docstring><![CDATA[Generate a structured scene plan from a high-level idea.
+
+Args:
+    idea: Core concept for the story (plain text).
+    number_of_scenes: Desired number of clips in the plan.
+    additional_context: Optional instructions or style notes.
+    character_description: Baseline description of the lead character.
+    character_characteristics: Personality traits for the character.
+    character_references: Optional list of reference profiles passed to Gemini.
+    video_type: High-level type of production (e.g., "vlog", "commercial").
+    video_characteristics: Overall stylistic notes (e.g., "realistic, 4k, cinematic").
+    camera_angle: Primary camera/perspective guidance for the scenes.
+    model: Override the Gemini model name.
+    config: Custom GenerateContentConfig; if omitted a JSON schema config is used.
+    response_model: Pydantic model describing the expected response payload.
+    save_path: Optional file path for writing the raw JSON plan.
+
+Returns:
+    ScenePlan: Parsed response from Gemini respecting the response_model schema.]]></docstring>
+          </method>
+          <method name="_generate_plan_google" signature="_generate_plan_google(self, prompt: str, request_config: types.GenerateContentConfig, model: str) -> str">
+          </method>
+          <method name="_generate_plan_daydreams" signature="_generate_plan_daydreams(self, prompt: str, schema: Dict[str, object], model: str) -> str">
+          </method>
+          <method name="_strip_code_fence" signature="_strip_code_fence(text: str) -> str">
+          </method>
+          <method name="_coerce_video_prompts" signature="_coerce_video_prompts(prompts: Sequence[Dict[str, Any]]) -> Dict[str, Any]">
+          </method>
+          <method name="_normalize_chat_model" signature="_normalize_chat_model(model: str) -> str">
+          </method>
+        </methods>
+      </class>
+      <function name="generate_scene_plan" signature="generate_scene_plan(idea: str) -> ScenePlan" line="503">
+        <docstring><![CDATA[Convenience wrapper around :class:`SceneWriter` for one-off calls.]]></docstring>
+      </function>
+    </module>
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\process\__init__.py">
       <docstring><![CDATA[Video processing module for Veo Tools.]]></docstring>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/process/extractor.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\process\extractor.py">
       <docstring><![CDATA[Frame extraction and video info utilities for Veo Tools.
 
 Enhancements:
@@ -1682,49 +1687,79 @@ Note:
     - Returns 0.0 for fps/duration if video properties cannot be determined]]></docstring>
       </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/server/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\__init__.py">
+      <docstring><![CDATA[Provider integration helpers for Veotools.]]></docstring>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/server/mcp_server.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\daydreams.py">
+      <docstring><![CDATA[Daydreams Router API client helpers.]]></docstring>
+      <class name="DaydreamsRouterClient" line="17">
+        <docstring><![CDATA[Lightweight wrapper around the Daydreams Router REST API.]]></docstring>
+        <methods>
+          <method name="__init__" signature="__init__(self) -> None">
+          </method>
+          <method name="_url" signature="_url(self, path: str) -> str">
+          </method>
+          <method name="submit_video_job" signature="submit_video_job(self, model: str, payload: Dict[str, Any]) -> Dict[str, Any]">
+          </method>
+          <method name="get_video_job" signature="get_video_job(self, job_id: str) -> Dict[str, Any]">
+          </method>
+          <method name="fetch_job_status" signature="fetch_job_status(self, status_url: str) -> Dict[str, Any]">
+          </method>
+          <method name="list_models" signature="list_models(self) -> Dict[str, Any]">
+          </method>
+          <method name="download_asset" signature="download_asset(self, asset_url: str, output_path) -> None">
+          </method>
+          <method name="create_chat_completion" signature="create_chat_completion(self, payload: Dict[str, Any]) -> Dict[str, Any]">
+          </method>
+        </methods>
+      </class>
+    </module>
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\server\__init__.py">
+    </module>
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\server\mcp_server.py">
       <docstring><![CDATA[Built-in MCP server entry point for Veotools.
 
 Run:
   veo-mcp            # via console script
   python -m veotools.mcp_server]]></docstring>
-      <function name="preflight" signature="preflight() -> dict" line="23">
+      <function name="preflight" signature="preflight() -> dict" line="24">
         <docstring><![CDATA[Check environment and system prerequisites.
 
-Returns a JSON dict with: ok, gemini_api_key, ffmpeg {installed, version},
+Returns a JSON dict with: ok, provider, api_key_present, ffmpeg {installed, version},
 write_permissions, base_path.]]></docstring>
       </function>
-      <function name="version" signature="version() -> dict" line="33">
+      <function name="version" signature="version() -> dict" line="34">
         <docstring><![CDATA[Report package and dependency versions.
 
 Returns keys: veotools, dependencies {google-genai, opencv-python, ...}, ffmpeg.]]></docstring>
       </function>
-      <function name="list_models" signature="list_models(include_remote: bool) -> dict" line="42">
+      <function name="list_models" signature="list_models(include_remote: bool) -> dict" line="43">
         <docstring><![CDATA[List available models with capability flags.
 
 - include_remote: when true, merges remote discovery from the API.
 Returns { models: [ {id, name, capabilities, default_duration, generation_time, source} ] }.]]></docstring>
       </function>
-      <function name="cache_create_from_files" signature="cache_create_from_files(model: str, files: list[str], system_instruction: str | None) -> dict" line="52">
+      <function name="cache_create_from_files" signature="cache_create_from_files(model: str, files: list[str], system_instruction: str | None) -> dict" line="53">
         <docstring><![CDATA[Create a cached content handle from local files.
 
 Returns {name, model, contents_count}.]]></docstring>
       </function>
-      <function name="cache_get" signature="cache_get(name: str) -> dict" line="61">
+      <function name="cache_get" signature="cache_get(name: str) -> dict" line="62">
         <docstring><![CDATA[Get cached content metadata by name.]]></docstring>
       </function>
-      <function name="cache_list" signature="cache_list() -> dict" line="67">
+      <function name="cache_list" signature="cache_list() -> dict" line="68">
         <docstring><![CDATA[List cached content metadata entries.]]></docstring>
       </function>
-      <function name="cache_update" signature="cache_update(name: str, ttl_seconds: int | None, expire_time_iso: str | None) -> dict" line="73">
+      <function name="cache_update" signature="cache_update(name: str, ttl_seconds: int | None, expire_time_iso: str | None) -> dict" line="74">
         <docstring><![CDATA[Update TTL or expiry time for a cache.]]></docstring>
       </function>
-      <function name="cache_delete" signature="cache_delete(name: str) -> dict" line="79">
+      <function name="cache_delete" signature="cache_delete(name: str) -> dict" line="80">
         <docstring><![CDATA[Delete a cached content entry by name.]]></docstring>
       </function>
-      <function name="generate_start" signature="generate_start(prompt: str, model: Optional[str], input_image_path: Optional[str], input_video_path: Optional[str], extract_at: Optional[float], options: Optional[Dict]) -> dict" line="85">
+      <function name="plan_scenes" signature="plan_scenes(idea: str, number_of_scenes: int, character_description: str | None, character_characteristics: str | None, video_type: str | None, video_characteristics: str | None, camera_angle: str | None, additional_context: str | None, model: str | None) -> dict" line="86">
+        <docstring><![CDATA[Generate a structured Gemini-authored scene plan.]]></docstring>
+      </function>
+      <function name="generate_start" signature="generate_start(prompt: str, model: Optional[str], input_image_path: Optional[str], input_video_path: Optional[str], extract_at: Optional[float], options: Optional[Dict]) -> dict" line="121">
         <docstring><![CDATA[Start a video generation job.
 
 - prompt: required text prompt
@@ -1736,49 +1771,52 @@ Returns {name, model, contents_count}.]]></docstring>
   person_generation: "allow_all"}
 Returns {job_id, status, progress, message, kind, created_at}.]]></docstring>
       </function>
-      <function name="generate_cancel" signature="generate_cancel(job_id: str) -> dict" line="149">
+      <function name="generate_cancel" signature="generate_cancel(job_id: str) -> dict" line="185">
         <docstring><![CDATA[Request cooperative cancellation for a running job.]]></docstring>
       </function>
-      <function name="list_recent_videos" signature="list_recent_videos(limit: int) -> list[dict]" line="155">
+      <function name="list_recent_videos" signature="list_recent_videos(limit: int) -> list[dict]" line="191">
         <docstring><![CDATA[List recent generated videos with URLs and metadata.
 
 - limit: max items (default 10).
 Returns array of {path, url, metadata, modified}.]]></docstring>
       </function>
-      <function name="get_job" signature="get_job(job_id: str) -> dict" line="179">
+      <function name="get_job" signature="get_job(job_id: str) -> dict" line="215">
         <docstring><![CDATA[Retrieve the persisted job record by id.]]></docstring>
       </function>
-      <function name="main" signature="main() -> None" line="280">
+      <function name="main" signature="main() -> None" line="316">
       </function>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/stitch/__init__.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\__init__.py">
       <docstring><![CDATA[Video stitching module for Veo Tools.]]></docstring>
     </module>
-    <module path="/Users/boat/Projects/veotools/src/veotools/stitch/seamless.py">
+    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\seamless.py">
       <docstring><![CDATA[Seamless video stitching for Veo Tools.]]></docstring>
-      <function name="stitch_videos" signature="stitch_videos(video_paths: List[Path], overlap: float, output_path: Optional[Path], on_progress: Optional[Callable]) -> VideoResult" line="12">
-        <docstring><![CDATA[Seamlessly stitch multiple videos together into a single continuous video.
+      <function name="_has_audio" signature="_has_audio(video_path: Path) -> bool" line="15">
+        <docstring><![CDATA[Return True if the media file contains an audio stream.]]></docstring>
+      </function>
+      <function name="stitch_videos" signature="stitch_videos(video_paths: List[Path], overlap: float, output_path: Optional[Path], on_progress: Optional[Callable]) -> VideoResult" line="40">
+        <docstring><![CDATA[Seamlessly stitch multiple videos (with audio) into a single timeline.
 
-Combines multiple video files into one continuous video by concatenating them
-with optional overlap trimming. All videos are resized to match the dimensions
-of the first video. The output is optimized with H.264 encoding for broad
-compatibility.
+Uses FFmpeg to concatenate videos while optionally trimming an overlap from
+the tail of each clip (except the last) to create smoother scene transitions.
+Both audio and video streams are preserved and re-encoded into a single
+H.264/AAC MP4.
 
 Args:
     video_paths: List of paths to video files to stitch together, in order.
     overlap: Duration in seconds to trim from the end of each video (except
         the last one) to create smooth transitions. Defaults to 1.0.
     output_path: Optional custom output path. If None, auto-generates a path
-        using StorageManager.
+        using :class:`StorageManager`.
     on_progress: Optional callback function called with progress updates (message, percent).
 
 Returns:
     VideoResult: Object containing the stitched video path, metadata, and operation details.
 
 Raises:
-    ValueError: If no videos are provided or if fewer than 2 videos are found.
+    ValueError: If fewer than two videos are provided.
     FileNotFoundError: If any input video file doesn't exist.
-    RuntimeError: If video processing fails.
+    RuntimeError: If FFmpeg fails to stitch the videos.
 
 Examples:
     Stitch videos with default overlap:
@@ -1810,7 +1848,7 @@ Note:
     - Automatically handles frame rate consistency
     - FFmpeg is used for final encoding if available, otherwise uses OpenCV]]></docstring>
       </function>
-      <function name="stitch_with_transitions" signature="stitch_with_transitions(video_paths: List[Path], transition_videos: List[Path], output_path: Optional[Path], on_progress: Optional[Callable]) -> VideoResult" line="169">
+      <function name="stitch_with_transitions" signature="stitch_with_transitions(video_paths: List[Path], transition_videos: List[Path], output_path: Optional[Path], on_progress: Optional[Callable]) -> VideoResult" line="235">
         <docstring><![CDATA[Stitch videos together with custom transition videos between them.
 
 Combines multiple videos by inserting transition videos between each pair
@@ -1853,7 +1891,7 @@ Note:
     This function uses stitch_videos internally with overlap=0 to preserve
     transition videos exactly as provided.]]></docstring>
       </function>
-      <function name="create_transition_points" signature="create_transition_points(video_a: Path, video_b: Path, extract_points: Optional[dict]) -> tuple" line="234">
+      <function name="create_transition_points" signature="create_transition_points(video_a: Path, video_b: Path, extract_points: Optional[dict]) -> tuple" line="300">
         <docstring><![CDATA[Extract frames from two videos to analyze potential transition points.
 
 Extracts representative frames from two videos that can be used to analyze
