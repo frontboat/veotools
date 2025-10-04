@@ -241,7 +241,8 @@ def preflight() -> Dict[str, Any]:
     Returns:
         dict: JSON-serializable dictionary containing:
             - ok (bool): Overall system readiness status
-            - gemini_api_key (bool): Whether GEMINI_API_KEY is set
+            - provider (str): Active video provider identifier
+            - api_key_present (bool): Whether the current provider's API key is set
             - ffmpeg (dict): FFmpeg installation status and version info
             - write_permissions (bool): Whether output directory is writable
             - base_path (str): Absolute path to the base output directory
@@ -250,8 +251,8 @@ def preflight() -> Dict[str, Any]:
         >>> status = preflight()
         >>> if not status['ok']:
         ...     print("System not ready for generation")
-        ...     if not status['gemini_api_key']:
-        ...         print("Please set GEMINI_API_KEY environment variable")
+        ...     if not status['api_key_present']:
+        ...         print("Please supply the API key for the configured provider")
         ...     if not status['ffmpeg']['installed']:
         ...         print("Please install FFmpeg for video processing")
         >>> else:
@@ -268,8 +269,12 @@ def preflight() -> Dict[str, Any]:
     storage = StorageManager()
     base = storage.base_path
 
-    # API key
-    api_key_present = bool(os.getenv("GEMINI_API_KEY"))
+    provider = (os.getenv("VEO_PROVIDER", "google") or "google").strip().lower()
+
+    if provider == "daydreams":
+        api_key_present = bool(os.getenv("DAYDREAMS_API_KEY"))
+    else:
+        api_key_present = bool(os.getenv("GEMINI_API_KEY"))
 
     # ffmpeg
     ffmpeg_installed = False
@@ -296,7 +301,8 @@ def preflight() -> Dict[str, Any]:
 
     return {
         "ok": api_key_present and write_permissions,
-        "gemini_api_key": api_key_present,
+        "provider": provider,
+        "api_key_present": api_key_present,
         "ffmpeg": {"installed": ffmpeg_installed, "version": ffmpeg_version},
         "write_permissions": write_permissions,
         "base_path": str(base.resolve()),
@@ -837,10 +843,32 @@ def list_models(include_remote: bool = True) -> Dict[str, Any]:
     # Optionally merge from remote discovery (best-effort)
     if include_remote:
         try:
-            client = VeoClient().client
-            if hasattr(client, "models") and hasattr(client.models, "list"):
+            wrapper = VeoClient()
+            client = wrapper.client
+            provider = wrapper.provider
+
+            if provider == "daydreams":
+                payload = client.list_models()
+                for remote in payload.get("data", []):
+                    model_id = remote.get("id")
+                    if not model_id:
+                        continue
+                    entry = models.get(model_id, {
+                        "id": model_id,
+                        "name": remote.get("id"),
+                        "capabilities": {},
+                    })
+                    caps = remote.get("capabilities", {})
+                    entry["capabilities"].update({
+                        "supports_audio": bool(caps.get("supportsAudio")),
+                        "supports_streaming": bool(caps.get("supportsStreaming")),
+                        "supports_system_messages": bool(caps.get("supportsSystemMessages")),
+                        "supports_json": bool(caps.get("supportsJson")),
+                    })
+                    entry["source"] = (entry.get("source") or "") + ("+remote" if entry.get("source") else "remote")
+                    models[model_id] = entry
+            elif hasattr(client, "models") and hasattr(client.models, "list"):
                 for remote in client.models.list():
-                    # Expect names like "models/veo-3.0-fast-generate-preview"
                     raw_name = getattr(remote, "name", "") or ""
                     model_id = raw_name.replace("models/", "") if raw_name else getattr(remote, "base_model_id", None)
                     if not model_id:
@@ -938,7 +966,10 @@ def cache_create_from_files(model: str, files: list[str], system_instruction: Op
     Returns { name, model, system_instruction?, contents_count } or { error_code, error_message } on failure.
     """
     try:
-        client = VeoClient().client
+        wrapper = VeoClient()
+        if wrapper.provider != "google":
+            return {"error_code": "UNSUPPORTED", "error_message": "Cache APIs are only available for the Google provider"}
+        client = wrapper.client
         uploaded = []
         for f in files:
             p = Path(f)
@@ -999,7 +1030,10 @@ def cache_get(name: str) -> Dict[str, Any]:
     Returns minimal metadata; fields vary by library version.
     """
     try:
-        client = VeoClient().client
+        wrapper = VeoClient()
+        if wrapper.provider != "google":
+            return {"error_code": "UNSUPPORTED", "error_message": "Cache APIs are only available for the Google provider"}
+        client = wrapper.client
         cache = client.caches.get(name=name)
         out: Dict[str, Any] = {"name": getattr(cache, "name", name)}
         # Attempt to surface lifecycle info when available
@@ -1063,7 +1097,10 @@ def cache_list() -> Dict[str, Any]:
     Returns { caches: [ {name, model?, display_name?, create_time?, update_time?, expire_time?, usage_metadata?} ] }
     """
     try:
-        client = VeoClient().client
+        wrapper = VeoClient()
+        if wrapper.provider != "google":
+            return {"error_code": "UNSUPPORTED", "error_message": "Cache APIs are only available for the Google provider"}
+        client = wrapper.client
         items = []
         for cache in client.caches.list():
             entry: Dict[str, Any] = {"name": getattr(cache, "name", None)}
@@ -1132,7 +1169,10 @@ def cache_update(name: str, ttl_seconds: Optional[int] = None, expire_time_iso: 
     - expire_time_iso: timezone-aware ISO-8601 datetime string
     """
     try:
-        client = VeoClient().client
+        wrapper = VeoClient()
+        if wrapper.provider != "google":
+            return {"error_code": "UNSUPPORTED", "error_message": "Cache APIs are only available for the Google provider"}
+        client = wrapper.client
         cfg_kwargs: Dict[str, Any] = {}
         if ttl_seconds is not None:
             cfg_kwargs["ttl"] = f"{int(ttl_seconds)}s"
@@ -1191,7 +1231,10 @@ def cache_delete(name: str) -> Dict[str, Any]:
     """
     """Delete a cached content entry by name."""
     try:
-        client = VeoClient().client
+        wrapper = VeoClient()
+        if wrapper.provider != "google":
+            return {"error_code": "UNSUPPORTED", "error_message": "Cache APIs are only available for the Google provider"}
+        client = wrapper.client
         client.caches.delete(name)
         return {"deleted": True, "name": name}
     except Exception as e:

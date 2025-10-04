@@ -20,7 +20,14 @@ pip install -e ".[dev,mcp]" # Contribute / run tests locally
 
 # Environment (choose your models / region access)
 export GEMINI_API_KEY="your-gemini-key"
+
+# Daydreams Router support (optional)
+export VEO_PROVIDER="daydreams"
+export DAYDREAMS_API_KEY="sk-router-..."
+# export DAYDREAMS_BASE_URL="https://api-beta.daydreams.systems/v1" # override if needed
 ```
+
+Set `VEO_PROVIDER=daydreams` to proxy prompts and video jobs through the Daydreams Router. Omit the flag (or set it to `google`) to call the Google GenAI SDK directly.
 
 ## Quick start (CLI)
 

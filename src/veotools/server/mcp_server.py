@@ -24,7 +24,7 @@ app = FastMCP("veotools")
 def preflight() -> dict:
     """Check environment and system prerequisites.
 
-    Returns a JSON dict with: ok, gemini_api_key, ffmpeg {installed, version},
+    Returns a JSON dict with: ok, provider, api_key_present, ffmpeg {installed, version},
     write_permissions, base_path.
     """
     return veo.preflight()

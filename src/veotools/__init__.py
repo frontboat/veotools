@@ -96,7 +96,11 @@ __all__ = [
 def init(api_key: str = None, log_level: str = "WARNING"):
     import os
     if api_key:
-        os.environ["GEMINI_API_KEY"] = api_key
+        provider = (os.getenv("VEO_PROVIDER", "google") or "google").strip().lower()
+        if provider == "daydreams":
+            os.environ["DAYDREAMS_API_KEY"] = api_key
+        else:
+            os.environ["GEMINI_API_KEY"] = api_key
     
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),

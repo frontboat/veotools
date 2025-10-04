@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
-from typing import List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from google.genai import types
 from pydantic import AnyUrl, BaseModel, Field
@@ -184,7 +185,11 @@ class SceneWriter:
 
     def __init__(self, model: str = "gemini-2.5-pro"):
         self.model = model
-        self._client = VeoClient().client
+        wrapper = VeoClient()
+        self._provider = getattr(wrapper, "provider", "google")
+        self._client = getattr(wrapper, "client", None)
+        if self._client is None:
+            raise RuntimeError("Failed to initialise provider client for scene writing")
 
     @staticmethod
     def _build_prompt_sections(
@@ -301,20 +306,18 @@ class SceneWriter:
         )
 
         schema = response_model.model_json_schema()
-        request_config = config or types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_json_schema=schema,
-        )
 
-        result = self._client.models.generate_content(
-            model=model or self.model,
-            contents=prompt,
-            config=request_config,
-        )
+        if self._provider == "daydreams":
+            raw = self._generate_plan_daydreams(prompt, schema, model or self.model)
+        else:
+            request_config = config or types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_json_schema=schema,
+            )
+            raw = self._generate_plan_google(prompt, request_config, model or self.model)
 
-        raw = getattr(result, "text", None)
         if not raw:
-            raise RuntimeError("Gemini scene writer returned an empty response")
+            raise RuntimeError("Scene writer returned an empty response")
 
         plan = response_model.model_validate_json(raw)
 
@@ -324,6 +327,177 @@ class SceneWriter:
             path.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
 
         return plan
+
+
+    def _generate_plan_google(
+        self,
+        prompt: str,
+        request_config: types.GenerateContentConfig,
+        model: str,
+    ) -> str:
+        result = self._client.models.generate_content(
+            model=model,
+            contents=prompt,
+            config=request_config,
+        )
+        return getattr(result, "text", None)
+
+    def _generate_plan_daydreams(
+        self,
+        prompt: str,
+        schema: Dict[str, object],
+        model: str,
+    ) -> str:
+        target_model = self._normalize_chat_model(model)
+        payload = {
+            "model": target_model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a cinematic video prompt writer for Google Veo. "
+                        "Return only valid JSON that matches the provided schema."
+                    ),
+                },
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.4,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "ScenePlan",
+                    "schema": schema,
+                },
+            },
+        }
+
+        response = self._client.create_chat_completion(payload)
+        choices = response.get("choices", [])
+        if not choices:
+            raise RuntimeError("Daydreams Router returned no choices for scene plan request")
+
+        message = choices[0].get("message", {})
+        content = message.get("content")
+        if isinstance(content, list):
+            content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+
+        if not content or not isinstance(content, str):
+            raise RuntimeError("Daydreams Router response did not include textual content")
+
+        normalized = self._strip_code_fence(content)
+        try:
+            data = json.loads(normalized)
+        except json.JSONDecodeError:
+            return normalized
+
+        if isinstance(data, dict) and "characters" not in data and data.get("video_prompts"):
+            converted = self._coerce_video_prompts(data["video_prompts"])
+            return json.dumps(converted)
+
+        return normalized
+
+    @staticmethod
+    def _strip_code_fence(text: str) -> str:
+        raw = text.strip()
+        if not raw.startswith("```"):
+            return raw
+
+        # Remove leading fence with optional language identifier
+        fence_pattern = re.compile(r"^```[a-zA-Z0-9_-]*\n?(.*)```$", re.DOTALL)
+        match = fence_pattern.match(raw)
+        if match:
+            return match.group(1).strip()
+
+        lines = raw.splitlines()
+        if not lines:
+            return raw
+        stripped = lines[1:]
+        while stripped and stripped[-1].strip() == "```":
+            stripped.pop()
+        return "\n".join(stripped).strip()
+
+    @staticmethod
+    def _coerce_video_prompts(prompts: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+        clips: List[Dict[str, Any]] = []
+        for idx, prompt_data in enumerate(prompts or [], start=1):
+            if not isinstance(prompt_data, dict):
+                continue
+            scene_prompt = str(
+                prompt_data.get("scene_prompt")
+                or prompt_data.get("prompt")
+                or prompt_data.get("description")
+                or "")
+            if not scene_prompt:
+                scene_prompt = "Describe the scene in detail."
+
+            duration = int(prompt_data.get("duration_seconds") or 8)
+            aspect = str(prompt_data.get("aspect_ratio") or "16:9")
+            location = prompt_data.get("setting") or prompt_data.get("location") or "Stylized arena"
+
+            clip = {
+                "id": f"clip-{idx}",
+                "shot": {
+                    "composition": "Dynamic animation frame",
+                    "camera": "Storyboard camera",
+                    "camera_motion": prompt_data.get("camera_motion") or "Sweeping motion",
+                    "frame_rate": "24 fps",
+                    "film_grain": None,
+                },
+                "subject": {
+                    "description": scene_prompt,
+                    "wardrobe": "Refer to scene prompt",
+                },
+                "scene": {
+                    "location": location,
+                    "time_of_day": prompt_data.get("time_of_day") or "unspecified",
+                    "environment": prompt_data.get("environment") or scene_prompt,
+                },
+                "visual_details": {
+                    "action": prompt_data.get("action") or scene_prompt,
+                    "props": prompt_data.get("props") or "Prompt-driven elements",
+                },
+                "cinematography": {
+                    "lighting": prompt_data.get("lighting") or "Stylized lighting",
+                    "tone": prompt_data.get("tone") or "Energetic",
+                    "color_grade": prompt_data.get("color_grade") or "High-contrast",
+                },
+                "audio_track": {
+                    "lyrics": prompt_data.get("dialogue"),
+                    "emotion": prompt_data.get("emotion") or "dynamic",
+                    "flow": prompt_data.get("flow") or "syncopated",
+                    "audio_base64": None,
+                    "wave_download_url": None,
+                    "youtube_reference": None,
+                    "format": "wav",
+                    "sample_rate_hz": 48000,
+                    "channels": 2,
+                },
+                "dialogue": {
+                    "character": prompt_data.get("speaker") or "Narrator",
+                    "line": prompt_data.get("dialogue") or scene_prompt,
+                    "subtitles": False,
+                },
+                "performance": {
+                    "mouth_shape_intensity": 0.5,
+                    "eye_contact_ratio": 0.5,
+                },
+                "duration_sec": duration,
+                "aspect_ratio": aspect,
+            }
+            clips.append(clip)
+
+        return {"characters": [], "clips": clips or []}
+
+    @staticmethod
+    def _normalize_chat_model(model: str) -> str:
+        aliases = {
+            "gemini-pro": "google-vertex/gemini-2.5-pro",
+            "gemini-2.5-pro": "google-vertex/gemini-2.5-pro",
+            "gemini-2.5-flash": "google-vertex/gemini-2.5-flash",
+            "gemini-2.5-flash-lite": "google-vertex/gemini-2.5-flash-lite",
+        }
+        key = model.strip()
+        return aliases.get(key, key)
 
 
 def generate_scene_plan(

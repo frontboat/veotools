@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 
@@ -171,3 +172,26 @@ def test_scene_writer_raises_on_empty_response(monkeypatch, empty_response):
     writer = SceneWriter()
     with pytest.raises(RuntimeError):
         writer.generate("Empty response", number_of_scenes=1)
+
+
+def test_scene_writer_daydreams_strips_code_fence(monkeypatch):
+    payload = {
+        "choices": [
+            {
+                "message": {
+                    "content": "```json\n{\n  \"characters\": [],\n  \"clips\": []\n}\n```"
+                }
+            }
+        ]
+    }
+
+    client = Mock()
+    client.create_chat_completion.return_value = payload
+    wrapper = SimpleNamespace(provider="daydreams", client=client)
+    monkeypatch.setattr("veotools.plan.scene_writer.VeoClient", lambda: wrapper)
+
+    writer = SceneWriter()
+    plan = writer.generate("Neon skyline", number_of_scenes=1)
+
+    assert plan.characters == []
+    assert plan.clips == []
