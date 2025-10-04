@@ -1,10 +1,6 @@
 # Veotools
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/veotools?style=flat-square&logo=python&labelColor=black&color=blue)
 
-
-
-
-
 Concise Python SDK and MCP server for generating and extending videos with Google Veo.
 
 ## Features
