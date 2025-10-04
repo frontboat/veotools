@@ -29,3 +29,9 @@ The following sections provide auto-generated documentation from the source code
 ### MCP API Module
 
 ::: veotools.api.mcp_api
+
+### Planning Modules
+
+::: veotools.plan.scene_writer
+
+::: veotools.plan.executor

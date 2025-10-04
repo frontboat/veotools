@@ -7,6 +7,7 @@ Run:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Optional, List, Dict
 
@@ -23,7 +24,7 @@ app = FastMCP("veotools")
 def preflight() -> dict:
     """Check environment and system prerequisites.
 
-    Returns a JSON dict with: ok, gemini_api_key, ffmpeg {installed, version},
+    Returns a JSON dict with: ok, provider, api_key_present, ffmpeg {installed, version},
     write_permissions, base_path.
     """
     return veo.preflight()
@@ -79,6 +80,41 @@ def cache_update(name: str, ttl_seconds: int | None = None, expire_time_iso: str
 def cache_delete(name: str) -> dict:
     """Delete a cached content entry by name."""
     return veo.cache_delete(name)
+
+
+@app.tool()
+def plan_scenes(
+    idea: str,
+    number_of_scenes: int = 4,
+    character_description: str | None = None,
+    character_characteristics: str | None = None,
+    video_type: str | None = None,
+    video_characteristics: str | None = None,
+    camera_angle: str | None = None,
+    additional_context: str | None = None,
+    model: str | None = None,
+) -> dict:
+    """Generate a structured Gemini-authored scene plan."""
+    kwargs: Dict[str, object] = {"number_of_scenes": number_of_scenes}
+    if character_description:
+        kwargs["character_description"] = character_description
+    if character_characteristics:
+        kwargs["character_characteristics"] = character_characteristics
+    if video_type:
+        kwargs["video_type"] = video_type
+    if video_characteristics:
+        kwargs["video_characteristics"] = video_characteristics
+    if camera_angle:
+        kwargs["camera_angle"] = camera_angle
+    if additional_context:
+        kwargs["additional_context"] = additional_context
+    if model:
+        kwargs["model"] = model
+    plan = veo.generate_scene_plan(
+        idea,
+        **kwargs,
+    )
+    return json.loads(plan.model_dump_json())
 
 
 @app.tool()
@@ -283,5 +319,3 @@ def main() -> None:
 
 if __name__ == "__main__":  # pragma: no cover
     main()
-
-

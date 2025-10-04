@@ -38,9 +38,19 @@ from .api.mcp_api import (
     cache_list,
     cache_update,
     cache_delete,
+    plan_scenes,
+)
+from .plan import (
+    ScenePlan,
+    CharacterProfile,
+    Clip,
+    SceneWriter,
+    generate_scene_plan,
+    PlanExecutionResult,
+    execute_scene_plan,
 )
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 __all__ = [
     "VeoClient",
@@ -61,6 +71,13 @@ __all__ = [
     "stitch_with_transitions",
     "create_transition_points",
     "Bridge",
+    "ScenePlan",
+    "CharacterProfile",
+    "Clip",
+    "SceneWriter",
+    "generate_scene_plan",
+    "PlanExecutionResult",
+    "execute_scene_plan",
     # MCP-friendly APIs
     "preflight",
     "version",
@@ -73,12 +90,17 @@ __all__ = [
     "cache_list",
     "cache_update",
     "cache_delete",
+    "plan_scenes",
 ]
 
 def init(api_key: str = None, log_level: str = "WARNING"):
     import os
     if api_key:
-        os.environ["GEMINI_API_KEY"] = api_key
+        provider = (os.getenv("VEO_PROVIDER", "google") or "google").strip().lower()
+        if provider == "daydreams":
+            os.environ["DAYDREAMS_API_KEY"] = api_key
+        else:
+            os.environ["GEMINI_API_KEY"] = api_key
     
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),

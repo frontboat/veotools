@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from .providers import DaydreamsRouterClient
+
 load_dotenv()
 
 class VeoClient:
@@ -28,6 +30,7 @@ class VeoClient:
     """
     _instance = None
     _client = None
+    _provider = None
     
     def __new__(cls):
         """Create or return the singleton instance.
@@ -47,11 +50,23 @@ class VeoClient:
         Raises:
             ValueError: If GEMINI_API_KEY is not found in environment variables.
         """
-        if self._client is None:
-            api_key = os.getenv('GEMINI_API_KEY')
-            if not api_key:
-                raise ValueError("GEMINI_API_KEY not found in .env file")
-            self._client = genai.Client(api_key=api_key)
+        cls = type(self)
+        if cls._client is None:
+            provider = (os.getenv("VEO_PROVIDER", "google") or "google").strip().lower()
+            cls._provider = provider
+
+            if provider == "daydreams":
+                api_key = os.getenv("DAYDREAMS_API_KEY")
+                if not api_key:
+                    raise ValueError("DAYDREAMS_API_KEY not found in environment")
+                base_url = os.getenv("DAYDREAMS_BASE_URL")
+                cls._client = DaydreamsRouterClient(api_key=api_key, base_url=base_url)
+            else:
+                api_key = os.getenv('GEMINI_API_KEY')
+                if not api_key:
+                    raise ValueError("GEMINI_API_KEY not found in .env file")
+                cls._provider = "google"
+                cls._client = genai.Client(api_key=api_key)
     
     @property
     def client(self):
@@ -60,7 +75,14 @@ class VeoClient:
         Returns:
             genai.Client: The initialized GenAI client.
         """
-        return self._client
+        return type(self)._client
+
+    @property
+    def provider(self) -> str:
+        """Return the active provider identifier (google or daydreams)."""
+
+        provider = type(self)._provider
+        return provider if provider else "google"
 
 class StorageManager:
     def __init__(self, base_path: Optional[str] = None):
@@ -257,15 +279,37 @@ class ProgressTracker:
         self.update(message, 100)
 
 class ModelConfig:
-    """Configuration and capabilities for different Veo video generation models.
-    
-    This class manages model-specific configurations and builds generation
-    configs based on model capabilities. It handles feature availability,
-    parameter validation, and safety settings.
-    
-    Attributes:
-        MODELS: Dictionary of available models and their configurations.
-    """
+    """Configuration and capabilities for different Veo video generation models."""
+
+    DEFAULT_MODEL = "veo-3.0-fast-generate-preview"
+
+    ALIASES = {
+        "veo-3": "veo-3.0-generate-preview",
+        "veo-3.0": "veo-3.0-generate-preview",
+        "google/veo-3": "veo-3.0-generate-preview",
+        "models/veo-3.0-generate-preview": "veo-3.0-generate-preview",
+        "veo-3-fast": "veo-3.0-fast-generate-preview",
+        "veo-3.0-fast": "veo-3.0-fast-generate-preview",
+        "google/veo-3-fast": "veo-3.0-fast-generate-preview",
+        "models/veo-3.0-fast-generate-preview": "veo-3.0-fast-generate-preview",
+        "veo-3.0-generate-001": "veo-3.0-generate-001",
+        "veo-3.0-fast-generate-001": "veo-3.0-fast-generate-001",
+    }
+
+    DAYDREAMS_MODEL_IDS = {
+        "veo-3.0-generate-preview": "google/veo-3",
+        "veo-3.0-fast-generate-preview": "google/veo-3-fast",
+        "veo-3.0-generate-001": "google/veo-3",
+        "veo-3.0-fast-generate-001": "google/veo-3-fast",
+    }
+
+    DAYDREAMS_SLUGS = {
+        "veo-3.0-generate-preview": "veo-3",
+        "veo-3.0-generate-001": "veo-3",
+        "veo-3.0-fast-generate-preview": "veo-3-fast",
+        "veo-3.0-fast-generate-001": "veo-3-fast",
+    }
+
     MODELS = {
         "veo-3.0-fast-generate-preview": {
             "name": "Veo 3.0 Fast",
@@ -275,7 +319,7 @@ class ModelConfig:
             "supports_aspect_ratio": True,
             "supports_audio": True,
             "default_duration": 8,
-            "generation_time": 60
+            "generation_time": 60,
         },
         "veo-3.0-generate-preview": {
             "name": "Veo 3.0",
@@ -285,7 +329,7 @@ class ModelConfig:
             "supports_aspect_ratio": True,
             "supports_audio": True,
             "default_duration": 8,
-            "generation_time": 120
+            "generation_time": 120,
         },
         "veo-2.0-generate-001": {
             "name": "Veo 2.0",
@@ -295,130 +339,104 @@ class ModelConfig:
             "supports_aspect_ratio": True,
             "supports_audio": False,
             "default_duration": 5,
-            "generation_time": 180
-        }
+            "generation_time": 180,
+        },
     }
-    
+
+    @classmethod
+    def normalize_model(cls, model: Optional[str]) -> str:
+        if not model:
+            return cls.DEFAULT_MODEL
+        base = model.strip()
+        if base.startswith("models/"):
+            base = base.replace("models/", "")
+        return cls.ALIASES.get(base, base)
+
+    @classmethod
+    def to_daydreams_model(cls, model: Optional[str]) -> Optional[str]:
+        normalized = cls.normalize_model(model)
+        return cls.DAYDREAMS_MODEL_IDS.get(normalized)
+
+    @classmethod
+    def to_daydreams_slug(cls, model: Optional[str]) -> Optional[str]:
+        normalized = cls.normalize_model(model)
+        slug = cls.DAYDREAMS_SLUGS.get(normalized)
+        if slug:
+            return slug
+        if normalized and "/" in normalized:
+            return normalized.split("/")[-1]
+        return None
+
     @classmethod
     def get_config(cls, model: str) -> dict:
-        """Get configuration for a specific model.
-        
-        Args:
-            model: Model identifier (with or without "models/" prefix).
-            
-        Returns:
-            dict: Model configuration dictionary containing capabilities and defaults.
-            
-        Examples:
-            >>> config = ModelConfig.get_config("veo-3.0-fast-generate-preview")
-            >>> print(config["name"])  # "Veo 3.0 Fast"
-            >>> print(config["supports_duration"])  # False
-        """
-        if model.startswith("models/"):
-            model = model.replace("models/", "")
-        
-        return cls.MODELS.get(model, cls.MODELS["veo-3.0-fast-generate-preview"])
-    
+        normalized = cls.normalize_model(model)
+        return cls.MODELS.get(normalized, cls.MODELS[cls.DEFAULT_MODEL])
+
     @classmethod
     def build_generation_config(cls, model: str, **kwargs) -> types.GenerateVideosConfig:
-        """Build a generation configuration based on model capabilities.
-        
-        This method creates a GenerateVideosConfig object with parameters
-        appropriate for the specified model. It validates parameters against
-        model capabilities and handles safety settings.
-        
-        Args:
-            model: Model identifier to use for generation.
-            **kwargs: Generation parameters including:
-                - number_of_videos: Number of videos to generate (default: 1)
-                - duration_seconds: Video duration (if supported by model)
-                - enhance_prompt: Whether to enhance the prompt (if supported)
-                - fps: Frames per second (if supported)
-                - aspect_ratio: Video aspect ratio (e.g., "16:9")
-                - negative_prompt: Negative prompt for generation
-                - person_generation: Person generation setting
-                - safety_settings: List of safety settings
-                - cached_content: Cached content handle
-        
-        Returns:
-            types.GenerateVideosConfig: Configuration object for video generation.
-            
-        Raises:
-            ValueError: If aspect_ratio is not supported by the model.
-            
-        Examples:
-            >>> config = ModelConfig.build_generation_config(
-            ...     "veo-3.0-fast-generate-preview",
-            ...     number_of_videos=2,
-            ...     aspect_ratio="16:9"
-            ... )
-        """
-        config = cls.get_config(model)
-        
+        """Build a generation configuration based on model capabilities."""
+
+        normalized = cls.normalize_model(model)
+        config = cls.get_config(normalized)
+
         params = {
-            "number_of_videos": kwargs.get("number_of_videos", 1)
+            "number_of_videos": kwargs.get("number_of_videos", 1),
         }
-        
+
         if config["supports_duration"] and "duration_seconds" in kwargs:
             params["duration_seconds"] = kwargs["duration_seconds"]
-        
+
         if config["supports_enhance"]:
             params["enhance_prompt"] = kwargs.get("enhance_prompt", False)
-        
+
         if config["supports_fps"] and "fps" in kwargs:
             params["fps"] = kwargs["fps"]
 
-        # Aspect ratio (e.g., "16:9"; Veo 3 limited to 16:9; Veo 2 supports 16:9 and 9:16)
-        if config.get("supports_aspect_ratio") and "aspect_ratio" in kwargs and kwargs["aspect_ratio"]:
-            ar = str(kwargs["aspect_ratio"])  # normalize
-            model_key = model.replace("models/", "")
-            if model_key.startswith("veo-3.0"):
+        if config.get("supports_aspect_ratio") and kwargs.get("aspect_ratio"):
+            ar = str(kwargs["aspect_ratio"])
+            if normalized.startswith("veo-3.0"):
                 allowed = {"16:9"}
-            elif model_key.startswith("veo-2.0"):
+            elif normalized.startswith("veo-2.0"):
                 allowed = {"16:9", "9:16"}
             else:
                 allowed = {"16:9"}
             if ar not in allowed:
-                raise ValueError(f"aspect_ratio '{ar}' not supported for model '{model_key}'. Allowed: {sorted(allowed)}")
+                raise ValueError(
+                    f"aspect_ratio '{ar}' not supported for model '{normalized}'. Allowed: {sorted(allowed)}"
+                )
             params["aspect_ratio"] = ar
 
-        # Docs-backed pass-throughs
-        if "negative_prompt" in kwargs and kwargs["negative_prompt"]:
+        if kwargs.get("negative_prompt"):
             params["negative_prompt"] = kwargs["negative_prompt"]
 
-        if "person_generation" in kwargs and kwargs["person_generation"]:
-            # Person generation options vary by model/region; pass through as provided
+        if kwargs.get("person_generation"):
             params["person_generation"] = kwargs["person_generation"]
-        
-        # Safety settings (optional, SDK >= 1.30.0 for some modalities). Accept either
-        # a list of dicts {category, threshold} or already-constructed types.SafetySetting.
+
         safety_settings = kwargs.get("safety_settings")
         if safety_settings:
-            normalized: list = []
+            normalized_settings: list = []
             for item in safety_settings:
                 try:
                     if hasattr(item, "category") and hasattr(item, "threshold"):
-                        normalized.append(item)
+                        normalized_settings.append(item)
                     elif isinstance(item, dict):
-                        normalized.append(types.SafetySetting(
-                            category=item.get("category"),
-                            threshold=item.get("threshold"),
-                        ))
+                        normalized_settings.append(
+                            types.SafetySetting(
+                                category=item.get("category"),
+                                threshold=item.get("threshold"),
+                            )
+                        )
                 except Exception:
-                    # Ignore malformed entries
                     continue
-            if normalized:
-                params["safety_settings"] = normalized
+            if normalized_settings:
+                params["safety_settings"] = normalized_settings
 
-        # Cached content handle (best-effort pass-through if supported)
-        if "cached_content" in kwargs and kwargs["cached_content"]:
+        if kwargs.get("cached_content"):
             params["cached_content"] = kwargs["cached_content"]
-        
-        # Construct config, dropping unknown fields if the SDK doesn't support them
+
         try:
             return types.GenerateVideosConfig(**params)
         except TypeError:
-            # Remove optional fields that may not be recognized by this client version
             for optional_key in ["safety_settings", "cached_content"]:
                 params.pop(optional_key, None)
             return types.GenerateVideosConfig(**params)

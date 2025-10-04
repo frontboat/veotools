@@ -1,436 +1,129 @@
 # Veotools
+
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/veotools?style=flat-square&logo=python&labelColor=black&color=blue)
 
-
-
-
-
-Concise Python SDK and MCP server for generating and extending videos with Google Veo.
+A Python toolkit for orchestrating multi-scene videos with Google Veo. Handles scene planning, video rendering, overlap-aware stitching, and progress tracking.
 
 ## Features
-- Video generation from text, image seed, or continuation from an existing video
-- Seamless extension workflow (extract last-second frame → generate → stitch with trim)
-- MCP tools with progress streaming (start/get/cancel, continue_video) and recent videos resource
-- Model discovery (local registry + remote list, cached)
-- Accurate metadata via ffprobe/OpenCV; outputs under project `output/` (override with `VEO_OUTPUT_DIR`)
-- Safety settings pass-through for generation (best-effort)
-- Context caching helpers and `cached_content` support
+- **One-command stories** – Turn ideas into storyboards, render clips, and deliver stitched videos
+- **Gemini planning** – Generate cinematic shot lists with consistent characters and dialogue
+- **Veo rendering** – Full SDK access with Veo 3 defaults and customizable prompts
+- **Audio-preserving stitching** – FFmpeg pipeline maintains perfect audio alignment
+- **Python-first** – Clean API for programmatic video generation workflows
 
-## Install
+## Installation
 
 ```bash
-pip install veotools
+pip install veotools # CLI and SDK
+pip install "veotools[mcp]" # Add MCP server support
+pip install -e ".[dev,mcp]" # Contribute / run tests locally
 
-# Or install from source
-pip install -e .
+# Environment (choose your models / region access)
+export GEMINI_API_KEY="your-gemini-key"
 
-# With MCP server support
-pip install "veotools[mcp]"
-
-# For development (includes testing tools)
-pip install -e ".[dev,mcp]"
-
-# Set your API key
-export GEMINI_API_KEY="your-api-key"
-# Or create a .env file with:
-# GEMINI_API_KEY=your-api-key
+# Daydreams Router support (optional)
+export VEO_PROVIDER="daydreams"
+export DAYDREAMS_API_KEY="sk-router-..."
+# export DAYDREAMS_BASE_URL="https://api-beta.daydreams.systems/v1" # override if needed
 ```
 
-## SDK quick start
+Set `VEO_PROVIDER=daydreams` to proxy prompts and video jobs through the Daydreams Router. Omit the flag (or set it to `google`) to call the Google GenAI SDK directly.
 
-### Simple Video Generation
-
-```python
-import veotools as veo
-
-# Initialize
-veo.init()
-
-# Generate video from text
-result = veo.generate_from_text(
-    "A serene mountain landscape at sunset",
-    model="veo-3.0-fast-generate-preview"
-)
-
-print(f"Generated: {result.path}")
-```
-
-### Continue and stitch
-
-```python
-# Continue from an existing video (like one from your phone)
-result = veo.generate_from_video(
-    "my_dog.mp4",
-    "the dog discovers a treasure chest",
-    extract_at=-1.0  # Use last frame
-)
-
-# Stitch them together seamlessly
-final = veo.stitch_videos(
-    ["my_dog.mp4", result.path],
-    overlap=1.0  # Trim 1 second overlap
-)
-```
-
-## CLI
-
-Install exposes the `veo` command. Use `-h/--help` on any subcommand.
+## Quick start (CLI)
 
 ```bash
-# Basics
-veo preflight
-veo list-models --remote
-
-# Generate from text (optional safety + cached content)
-veo generate --prompt "cat riding a hat" --model veo-3.0-fast-generate-preview \
-  --safety-json "[{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_ONLY_HIGH\"}]" \
-  --cached-content "caches/your-cache-name"
-
-# Continue a video and stitch seamlessly
-veo continue --video dog.mp4 --prompt "the dog finds a treasure chest" --overlap 1.0 \
-  --safety-json "[{\"category\":\"HARM_CATEGORY_HARASSMENT\",\"threshold\":\"BLOCK_ONLY_HIGH\"}]"
-
-# Help
-veo --help
-veo generate --help
+# Plan + render + stitch in one command
+veo plan-run \
+  --idea "N64 Japanese retro explainer about the x402 protocol" \
+  --save-plan output-plans/x402.json \
+  --execute-model veo-3.0-generate-001 \
+  --seed-last-frame --seed-offset -0.25
 ```
 
-### Create a Story with Bridge
+Outputs land under `output/`:
+- `output-plans/x402.json` – Gemini storyboard (optional if you omit `--save-plan`).
+- `output/videos/video_*.mp4` – Individual clips.
+- `output/videos/stitched_*.mp4` – Final stitched master with audio.
 
-```python
-# Chain operations together
-bridge = veo.Bridge("my_story")
+You can also execute an existing plan:
 
-final_video = (bridge
-    .add_media("sunrise.jpg")
-    .generate("sunrise coming to life")
-    .add_media("my_video.mp4")
-    .generate("continuing the adventure")
-    .stitch(overlap=1.0)
-    .save("my_story.mp4")
-)
+```bash
+veo plan-execute --plan output-plans/x402.json --model veo-3.0-generate-001 --seed-last-frame
 ```
 
-## Core functions
+…and generate only the storyboard:
 
-### Generation
+```bash
+veo plan --idea "Retro travel vlog" --scenes 4 --save output-plans/vlog.json --json
+```
 
-- `generate_from_text(prompt, model, **kwargs)` - Generate video from text
-- `generate_from_image(image_path, prompt, model, **kwargs)` - Generate video from image
-- `generate_from_video(video_path, prompt, extract_at, model, **kwargs)` - Continue video
-
-Optional config supported (best-effort pass-through):
-- `aspect_ratio` (model-dependent)
-- `negative_prompt`
-- `person_generation` (validated per Veo model and mode)
-- `safety_settings` (list of {category, threshold} or `types.SafetySetting`)
-- `cached_content` (cache name string)
-
-### Processing
-
-- `extract_frame(video_path, time_offset)` - Extract single frame
-- `extract_frames(video_path, times)` - Extract multiple frames
-- `get_video_info(video_path)` - Get video metadata
-
-### Stitching
-
-- `stitch_videos(video_paths, overlap)` - Stitch videos with overlap trimming
-- `stitch_with_transitions(videos, transitions)` - Stitch with transition videos
-
-### Workflow
-
-- `Bridge()` - Create workflow chains
-- `VideoResult` - Web-ready result objects
-- `ProgressTracker` - Progress callback handling
-
-## MCP tools
-
-These functions are designed for integration with MCP servers and return deterministic JSON-friendly dicts.
-
-### System
+## Quick start (Python)
 
 ```python
 import veotools as veo
 
-veo.preflight()
-# -> { ok: bool, gemini_api_key: bool, ffmpeg: {installed, version}, write_permissions: bool, base_path: str }
+veo.init()  # sets up logging + validates GEMINI_API_KEY
 
-veo.version()
-# -> { veotools: str | None, dependencies: {...}, ffmpeg: str | None }
-```
-
-### Non-blocking generation jobs
-
-```python
-import veotools as veo
-
-# Start a job immediately
-start = veo.generate_start({
-  "prompt": "A serene mountain landscape at sunset",
-  "model": "veo-3.0-fast-generate-preview"
-})
-job_id = start["job_id"]
-
-# Poll status
-status = veo.generate_get(job_id)
-# -> { job_id, status, progress, message, kind, remote_operation_id?, result?, error_code?, error_message? }
-
-# Request cancellation (cooperative)
-veo.generate_cancel(job_id)
-```
-
-### Caching helpers
-
-Programmatic usage via MCP-friendly APIs:
-
-```python
-import veotools as veo
-
-# Create a cache from files
-cache = veo.cache_create_from_files(
-  model="gemini-1.5-flash-001",
-  files=["media/a11.txt"],
-  system_instruction="You are an expert analyzing transcripts."
+plan = veo.generate_scene_plan(
+    "N64 Japanese retro explainer about the x402 protocol",
+    number_of_scenes=4,
+    additional_context="Keep the tone energetic and educational",
 )
 
-# Use cached content in generation
-start = veo.generate_start({
-  "prompt": "Summarize the transcript",
-  "model": "veo-3.0-fast-generate-preview",
-  "options": {"cached_content": cache.get("name")}
-})
-```
-
-Manage cached content:
-
-```python
-import veotools as veo
-
-# List caches (metadata only)
-listing = veo.cache_list()
-for c in listing.get("caches", []):
-    print(c.get("name"), c.get("display_name"), c.get("expire_time"))
-
-# Get single cache metadata
-meta = veo.cache_get(name="caches/abc123")
-
-# Update TTL or expiry time
-veo.cache_update(name="caches/abc123", ttl_seconds=600)  # set TTL to 10 minutes
-# or
-veo.cache_update(name="caches/abc123", expire_time_iso="2025-01-27T16:02:36.473528+00:00")
-
-# Delete cache
-veo.cache_delete(name="caches/abc123")
-```
-
-### Cursor MCP configuration
-
-Add an entry in `~/.cursor/mcp.json` pointing to the installed `veo-mcp` (or your venv path):
-
-```json
-{
-  "mcpServers": {
-    "veotools": {
-      "command": "/Users/you/.venv/bin/veo-mcp",
-      "args": [],
-      "env": {
-        "GEMINI_API_KEY": "your-api-key",
-        "VEO_OUTPUT_DIR": "/Users/you/projects/output" 
-      },
-      "disabled": false
-    }
-  }
-}
-```
-
-Alternatively, use Python directly:
-
-```json
-{
-  "mcpServers": {
-    "veotools": {
-      "command": "/Users/you/.venv/bin/python",
-      "args": ["-m", "veotools.mcp_server"],
-      "env": { "GEMINI_API_KEY": "your-api-key" },
-      "disabled": false
-    }
-  }
-}
-```
-
-## Model discovery
-```python
-models = veotools.list_models(include_remote=True)
-print([m["id"] for m in models["models"] if m["id"].startswith("veo-")])
-```
-
-## Progress Tracking
-
-```python
-def my_progress(message: str, percent: int):
-    print(f"{message}: {percent}%")
-
-result = veo.generate_from_text(
-    "sunset over ocean",
-    on_progress=my_progress
+result = veo.execute_scene_plan(
+    plan,
+    model="veo-3.0-generate-001",
+    auto_seed_last_frame=True,        # feed each clip the previous clip's final frame
+    seed_frame_offset=-0.25,          # extract the seed frame 0.25s before the end
 )
+
+print("Rendered clip files:")
+for clip in result.clip_results:
+    print(" -", clip.path)
+
+if result.final_result:
+    print("Final stitched video:", result.final_result.path)
 ```
 
-## Web-ready results
+## CLI overview
+- `veo plan` – Generate / save a Gemini storyboard (structured JSON).
+- `veo plan-execute` – Render clips + stitch an existing plan.
+- `veo plan-run` – Plan and execute in one shot (see quick start).
+- `veo generate` / `veo continue` – Low-level Veo helpers for ad hoc clips.
+- `veo list-models`, `veo preflight` – Environment + model diagnostics.
 
-All results are JSON-serializable for API integration:
+Run `veo <command> --help` for full flag descriptions.
 
-```python
-result = veo.generate_from_text("sunset")
+## Python API map
 
-# Convert to dictionary
-data = result.to_dict()
+| Task | Function(s) |
+|------|-------------|
+| Scene planning | `generate_scene_plan`, `SceneWriter` |
+| Plan execution | `execute_scene_plan`, `PlanExecutionResult` |
+| Single clip generation | `generate_from_text`, `generate_from_image`, `generate_from_video` |
+| Media analysis | `extract_frame`, `extract_frames`, `get_video_info` |
+| Stitching | `stitch_videos`, `stitch_with_transitions`, `create_transition_points` |
+| Workflow chaining | `Bridge` (fluent API for multi-step stories) |
 
-# Ready for JSON API
-import json
-json_response = json.dumps(data)
-```
+### Model / safety notes
+- Veo 3 text-to-video clips default to `person_generation="allow_all"`; image/video-seeded clips default to `allow_adult`. Override via keyword arguments if you need a different policy.
+- Use `list_models(include_remote=True)` to discover the Veo variants your account can access (stable IDs: `veo-3.0-generate-001`, `veo-3.0-fast-generate-001`, etc.).
+
+### Storage layout
+- `output/videos/` – All rendered clips, stitched deliverables, and intermediate assets.
+- `output/frames/` – Extracted stills (including auto-seed frames when enabled).
+- `output/ops/` – MCP job records, cached model lists, etc.
+- Override with `VEO_OUTPUT_DIR` or pass a custom base path to `StorageManager`.
 
 ## Examples
+- `examples/plan_run.py` – Full idea → plan → render workflow in ~30 lines.
+- `examples/text_to_video.py` – Minimal text-to-video clip generator.
+- `examples/bridge_story.py` – Build a three-scene story with the fluent `Bridge` API.
 
-See the `examples/` folder for complete examples:
+## Contributing & tests
+Pull requests are welcome! Please:
+1. Install with `pip install -e ".[dev,mcp]"`.
+2. Run `pytest` (the suite relies on mocks; no live API calls).
+3. Update docs/examples when behaviour changes.
 
-- `examples/text_to_video.py`
-- `examples/video_to_video.py`
-- `examples/chained_workflow.py`
-- `examples/all_functions.py`
-
-## Project Structure
-
-```
-src/veotools/
-├── __init__.py          # Package initialization and exports
-├── core.py              # Core client and storage management
-├── models.py            # Data models and result objects
-├── cli.py               # Command-line interface
-├── api/
-│   ├── bridge.py        # Workflow orchestration API
-│   └── mcp_api.py       # MCP-friendly wrapper functions
-├── generate/
-│   └── video.py         # Video generation functions
-├── process/
-│   └── extractor.py     # Frame extraction and metadata
-├── stitch/
-│   └── seamless.py      # Video stitching capabilities
-└── server/
-    └── mcp_server.py    # MCP server implementation
-
-tests/                   # Test suite (mirrors src structure)
-├── conftest.py          # Shared fixtures and configuration
-├── test_core.py
-├── test_models.py
-├── test_api/
-├── test_generate/
-├── test_process/
-└── test_stitch/
-```
-
-## Key Concepts
-
-### VideoResult
-Web-ready result object with metadata, progress, and JSON serialization.
-
-### Bridge Pattern
-Chain operations together for complex workflows:
-```python
-bridge.add_media().generate().stitch().save()
-```
-
-### Progress Callbacks
-Track long-running operations:
-```python
-on_progress=lambda msg, pct: print(f"{msg}: {pct}%")
-```
-
-### Storage Manager
-Organized file management (local now, cloud-ready for future).
-
-## Notes
-
-- Generation usually takes 1–3 minutes
-- Veo access may require allowlist
-- Person generation constraints per Veo docs:
-  - Veo 3: text→video allows `allow_all`; image/video-seeded allows `allow_adult`
-  - Veo 2: text→video allows `allow_all`, `allow_adult`, `dont_allow`; image/video-seeded allows `allow_adult`, `dont_allow`
-
-## License
-
-MIT
-
-## Development
-
-### Setting Up Development Environment
-
-```bash
-# Clone the repository
-git clone https://github.com/frontboat/veotools.git
-cd veotools
-
-# Install in development mode with all dependencies
-pip install -e ".[dev,mcp]"
-
-# Set up pre-commit hooks (optional)
-pre-commit install
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run only unit tests (fast, no external dependencies)
-pytest -m unit
-
-# Run integration tests
-pytest -m integration
-
-# Run with coverage report
-pytest --cov=veotools --cov-report=html
-
-# Run tests in parallel
-pytest -n auto
-
-# Using Make commands
-make test           # Run all tests
-make test-unit      # Run only unit tests
-make test-coverage  # Run with coverage report
-```
-
-### Testing Guidelines
-
-- Tests are organized to mirror the source code structure
-- All tests use pytest and follow AAA pattern (Arrange-Act-Assert)
-- External dependencies (API calls, ffmpeg) are mocked in unit tests
-- Fixtures are defined in `tests/conftest.py`
-- Mark tests appropriately: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.slow`
-
-### Building and Publishing
-
-```bash
-# Build the package
-python -m build
-
-# Check the package
-twine check dist/*
-
-# Upload to PyPI (requires credentials)
-twine upload dist/*
-```
-
-## Contributing
-
-Pull requests welcome! Please ensure:
-- All tests pass (`make test`)
-- Code follows existing style conventions
-- New features include appropriate tests
-- Documentation is updated as needed
-
-## Support
-
-For issues and questions, please use GitHub Issues.
+MCP users can launch the server with `veo-mcp` or `python -m veotools.server.mcp_server`.

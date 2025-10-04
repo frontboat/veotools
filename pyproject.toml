@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "veotools"
-version = "0.1.9"
+version = "0.1.10"
 description = "A Python toolkit for AI-powered video generation and seamless stitching using Google's Veo models."
 readme = "readme.md"
 requires-python = ">=3.10"
@@ -26,11 +26,12 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-  "google-genai>=1.30.0,<2.0.0",
+  "google-genai>=1.41.0",
   "opencv-python>=4.8.0",
   "requests>=2.31.0",
   "python-dotenv>=1.0.0",
   "numpy>=1.26.0",
+  "pydantic>=2.11.0",
 ]
 
 [project.urls]
@@ -103,4 +104,3 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
-

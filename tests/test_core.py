@@ -27,6 +27,7 @@ class TestVeoClient:
         # Clear the singleton instance
         VeoClient._instance = None
         VeoClient._client = None
+        VeoClient._provider = None
         
         client = VeoClient()
         assert client._client is not None
@@ -35,10 +36,13 @@ class TestVeoClient:
     def test_initialization_without_api_key_raises_error(self, monkeypatch):
         """Test VeoClient raises error when API key is missing."""
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-        
+        monkeypatch.delenv("DAYDREAMS_API_KEY", raising=False)
+        monkeypatch.delenv("VEO_PROVIDER", raising=False)
+
         # Clear the singleton instance
         VeoClient._instance = None
         VeoClient._client = None
+        VeoClient._provider = None
         
         with pytest.raises(ValueError, match="GEMINI_API_KEY not found"):
             VeoClient()
@@ -52,9 +56,29 @@ class TestVeoClient:
         # Clear the singleton instance
         VeoClient._instance = None
         VeoClient._client = None
+        VeoClient._provider = None
         
         client = VeoClient()
         assert client.client == client._client
+
+    @pytest.mark.unit
+    @patch('veotools.core.DaydreamsRouterClient')
+    def test_daydreams_provider_initialization(self, mock_router, monkeypatch):
+        """Ensure VeoClient initializes the Daydreams Router client when configured."""
+        monkeypatch.setenv("VEO_PROVIDER", "daydreams")
+        monkeypatch.setenv("DAYDREAMS_API_KEY", "router-key")
+        monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+        mock_router.return_value = Mock()
+
+        VeoClient._instance = None
+        VeoClient._client = None
+        VeoClient._provider = None
+
+        client = VeoClient()
+
+        mock_router.assert_called_once_with(api_key="router-key", base_url=None)
+        assert client.provider == "daydreams"
 
 
 class TestStorageManager:
@@ -276,6 +300,23 @@ class TestModelConfig:
             config = ModelConfig.MODELS[model_id]
             for key in required_keys:
                 assert key in config, f"Model {model_id} missing key: {key}"
+
+    @pytest.mark.unit
+    def test_normalize_model_aliases(self):
+        """Alias mappings normalize to canonical model ids."""
+        assert ModelConfig.normalize_model("google/veo-3") == "veo-3.0-generate-preview"
+        assert ModelConfig.normalize_model("models/veo-3.0-fast-generate-preview") == "veo-3.0-fast-generate-preview"
+        assert ModelConfig.normalize_model(None) == "veo-3.0-fast-generate-preview"
+
+    @pytest.mark.unit
+    def test_daydreams_model_mapping(self):
+        """Canonical models map to Daydreams Router identifiers."""
+        assert ModelConfig.to_daydreams_model("veo-3.0-fast-generate-preview") == "google/veo-3-fast"
+        assert ModelConfig.to_daydreams_model("veo-3.0-generate-001") == "google/veo-3"
+        assert ModelConfig.to_daydreams_model("google/veo-3") == "google/veo-3"
+        assert ModelConfig.to_daydreams_model("unknown-model") is None
+        assert ModelConfig.to_daydreams_slug("veo-3.0-fast-generate-001") == "veo-3-fast"
+        assert ModelConfig.to_daydreams_slug("google/veo-3") == "veo-3"
 
 
 # Integration tests (marked for conditional execution)
