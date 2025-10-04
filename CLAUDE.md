@@ -141,7 +141,7 @@ Person generation varies by Veo model and mode:
 ### Dependencies
 
 Core dependencies managed in `pyproject.toml`:
-- `google-genai>=1.30.0` - Google's generative AI client
+- `google-genai>=1.41.0` - Google's generative AI client
 - `opencv-python>=4.8.0` - Video processing
 - `python-dotenv>=1.0.0` - Environment configuration
 - `mcp[cli]>=1.0.0` (optional) - MCP server support

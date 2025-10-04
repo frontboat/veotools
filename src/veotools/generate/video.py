@@ -54,6 +54,24 @@ def _validate_person_generation(model: str, mode: str, person_generation: Option
             f"person_generation='{person_generation}' not allowed for {model_key or 'veo-3.0'} in {mode} mode. Allowed: {sorted(allowed)}"
         )
 
+
+def _apply_default_person_generation(
+    model: str,
+    mode: str,
+    config_params: dict,
+) -> None:
+    """Populate default person_generation for Veo 3 models when unspecified."""
+
+    if "person_generation" in config_params and config_params["person_generation"]:
+        return
+
+    model_key = model.replace("models/", "") if model else ""
+    if model_key.startswith("veo-3."):
+        if mode == "text":
+            config_params["person_generation"] = "allow_all"
+        else:  # image or video
+            config_params["person_generation"] = "allow_adult"
+
 def generate_from_text(
     prompt: str,
     model: str = "veo-3.0-fast-generate-preview",
@@ -117,6 +135,7 @@ def generate_from_text(
         config_params = kwargs.copy()
         if duration_seconds:
             config_params["duration_seconds"] = duration_seconds
+        _apply_default_person_generation(model, "text", config_params)
         # Validate person_generation constraints (Veo 3/2 rules)
         _validate_person_generation(model, "text", config_params.get("person_generation"))
         
@@ -252,6 +271,7 @@ def generate_from_image(
             model = f"models/{model}"
         
         config_params = kwargs.copy()
+        _apply_default_person_generation(model, "image", config_params)
         # Validate person_generation constraints (Veo 3/2 rules)
         _validate_person_generation(model, "image", config_params.get("person_generation"))
         

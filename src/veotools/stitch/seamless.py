@@ -1,6 +1,9 @@
 """Seamless video stitching for Veo Tools."""
 
-import cv2
+from __future__ import annotations
+
+import json
+import subprocess
 from pathlib import Path
 from typing import List, Optional, Callable
 
@@ -9,34 +12,59 @@ from ..models import VideoResult, VideoMetadata
 from ..process.extractor import get_video_info
 
 
+def _has_audio(video_path: Path) -> bool:
+    """Return True if the media file contains an audio stream."""
+
+    try:
+        cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a",
+            "-show_entries",
+            "stream=index",
+            "-of",
+            "json",
+            str(video_path),
+        ]
+        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        data = json.loads(res.stdout or "{}")
+        return bool(data.get("streams"))
+    except subprocess.CalledProcessError:
+        return False
+    except json.JSONDecodeError:
+        return False
+
+
 def stitch_videos(
     video_paths: List[Path],
     overlap: float = 1.0,
     output_path: Optional[Path] = None,
-    on_progress: Optional[Callable] = None
+    on_progress: Optional[Callable] = None,
 ) -> VideoResult:
-    """Seamlessly stitch multiple videos together into a single continuous video.
+    """Seamlessly stitch multiple videos (with audio) into a single timeline.
 
-    Combines multiple video files into one continuous video by concatenating them
-    with optional overlap trimming. All videos are resized to match the dimensions
-    of the first video. The output is optimized with H.264 encoding for broad
-    compatibility.
+    Uses FFmpeg to concatenate videos while optionally trimming an overlap from
+    the tail of each clip (except the last) to create smoother scene transitions.
+    Both audio and video streams are preserved and re-encoded into a single
+    H.264/AAC MP4.
 
     Args:
         video_paths: List of paths to video files to stitch together, in order.
         overlap: Duration in seconds to trim from the end of each video (except
             the last one) to create smooth transitions. Defaults to 1.0.
         output_path: Optional custom output path. If None, auto-generates a path
-            using StorageManager.
+            using :class:`StorageManager`.
         on_progress: Optional callback function called with progress updates (message, percent).
 
     Returns:
         VideoResult: Object containing the stitched video path, metadata, and operation details.
 
     Raises:
-        ValueError: If no videos are provided or if fewer than 2 videos are found.
+        ValueError: If fewer than two videos are provided.
         FileNotFoundError: If any input video file doesn't exist.
-        RuntimeError: If video processing fails.
+        RuntimeError: If FFmpeg fails to stitch the videos.
 
     Examples:
         Stitch videos with default overlap:
@@ -68,101 +96,139 @@ def stitch_videos(
         - Automatically handles frame rate consistency
         - FFmpeg is used for final encoding if available, otherwise uses OpenCV
     """
-    if not video_paths:
-        raise ValueError("No videos provided to stitch")
-    
+    if len(video_paths) < 2:
+        raise ValueError("Need at least two videos to stitch")
+
     storage = StorageManager()
     progress = ProgressTracker(on_progress)
     result = VideoResult()
-    
+
     try:
         progress.start("Preparing")
-        
+
         for path in video_paths:
             if not path.exists():
                 raise FileNotFoundError(f"Video not found: {path}")
-        
-        first_info = get_video_info(video_paths[0])
-        fps = first_info["fps"]
-        width = first_info["width"]
-        height = first_info["height"]
-        
+
+        clip_info: List[dict] = []
+        for path in video_paths:
+            info = get_video_info(path)
+            duration = float(info.get("duration") or 0.0)
+            if duration <= 0:
+                raise RuntimeError(f"Unable to determine duration for {path}")
+            clip_info.append(info)
+
+        # Determine if all clips contain audio. ffprobe via get_video_info doesn't
+        # expose audio presence, so detect separately.
+        audio_presence: List[bool] = []
+        for path in video_paths:
+            audio_presence.append(_has_audio(path))
+        include_audio = any(audio_presence)
+
         if output_path is None:
             filename = f"stitched_{result.id[:8]}.mp4"
             output_path = storage.get_video_path(filename)
-        
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        temp_path = output_path.parent / f"temp_{output_path.name}"
-        out = cv2.VideoWriter(str(temp_path), fourcc, fps, (width, height))
-        
-        total_frames_written = 0
-        total_videos = len(video_paths)
-        
-        for i, video_path in enumerate(video_paths):
-            is_last_video = (i == total_videos - 1)
-            percent = int((i / total_videos) * 90)
-            progress.update(f"Processing {i+1}/{total_videos}", percent)
-            
-            cap = cv2.VideoCapture(str(video_path))
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            
-            if not is_last_video and overlap > 0:
-                frames_to_trim = int(fps * overlap)
-                frames_to_use = max(1, total_frames - frames_to_trim)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        filter_parts: List[str] = []
+        video_refs: List[str] = []
+        audio_refs: List[str] = []
+
+        for idx, (path, info) in enumerate(zip(video_paths, clip_info)):
+            duration = float(info.get("duration") or 0.0)
+            trim_end = duration
+            if overlap > 0 and idx < len(video_paths) - 1 and duration - overlap > 0.01:
+                trim_end = duration - overlap
+
+            video_label = f"v{idx}"
+            if trim_end < duration:
+                filter_parts.append(
+                    f"[{idx}:v]trim=0:{trim_end:.6f},setpts=PTS-STARTPTS[{video_label}]"
+                )
             else:
-                frames_to_use = total_frames
-            
-            frame_count = 0
-            while frame_count < frames_to_use:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                
-                if frame.shape[1] != width or frame.shape[0] != height:
-                    frame = cv2.resize(frame, (width, height))
-                
-                out.write(frame)
-                frame_count += 1
-                total_frames_written += 1
-            
-            cap.release()
-        
-        out.release()
-        
-        import subprocess
+                filter_parts.append(
+                    f"[{idx}:v]setpts=PTS-STARTPTS[{video_label}]"
+                )
+            video_refs.append(f"[{video_label}]")
+
+            if include_audio:
+                audio_label = f"a{idx}"
+                if audio_presence[idx]:
+                    if trim_end < duration:
+                        filter_parts.append(
+                            f"[{idx}:a]atrim=0:{trim_end:.6f},asetpts=PTS-STARTPTS[{audio_label}]"
+                        )
+                    else:
+                        filter_parts.append(
+                            f"[{idx}:a]asetpts=PTS-STARTPTS[{audio_label}]"
+                        )
+                else:
+                    filter_parts.append(
+                        f"anullsrc=channel_layout=stereo:sample_rate=48000,atrim=0:{trim_end:.6f}[{audio_label}]"
+                    )
+                audio_refs.append(f"[{audio_label}]")
+
+        if include_audio:
+            concat_inputs = "".join(v + a for v, a in zip(video_refs, audio_refs))
+            filter_parts.append(
+                f"{concat_inputs}concat=n={len(video_paths)}:v=1:a=1[outv][outa]"
+            )
+        else:
+            concat_inputs = "".join(video_refs)
+            filter_parts.append(
+                f"{concat_inputs}concat=n={len(video_paths)}:v=1:a=0[outv]"
+            )
+
+        filter_complex = "; ".join(filter_parts)
+
+        cmd: List[str] = ["ffmpeg"]
+        for path in video_paths:
+            cmd.extend(["-i", str(path)])
+        cmd.extend([
+            "-filter_complex", filter_complex,
+            "-map", "[outv]",
+        ])
+        if include_audio:
+            cmd.extend(["-map", "[outa]"])
+        cmd.extend([
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-crf", "21",
+            "-pix_fmt", "yuv420p",
+        ])
+        if include_audio:
+            cmd.extend(["-c:a", "aac", "-b:a", "192k"])
+        cmd.extend([
+            "-movflags", "+faststart",
+            "-y",
+            str(output_path),
+        ])
+
+        progress.update("Encoding", 90)
         try:
-            cmd = [
-                "ffmpeg", "-i", str(temp_path),
-                "-c:v", "libx264",
-                "-preset", "fast",
-                "-crf", "23",
-                "-pix_fmt", "yuv420p",
-                "-movflags", "+faststart",
-                "-y",
-                str(output_path)
-            ]
             subprocess.run(cmd, check=True, capture_output=True)
-            temp_path.unlink()
-        except subprocess.CalledProcessError:
-            import shutil
-            shutil.move(str(temp_path), str(output_path))
-        
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(
+                f"Failed to stitch videos with ffmpeg: {exc.stderr.decode().strip() if exc.stderr else exc}"
+            ) from exc
+
+        progress.complete("Complete")
+
         result.path = output_path
         result.url = storage.get_url(output_path)
+        output_info = get_video_info(output_path)
         result.metadata = VideoMetadata(
-            fps=fps,
-            duration=total_frames_written / fps if fps > 0 else 0,
-            width=width,
-            height=height
+            fps=float(output_info.get("fps") or 0.0),
+            duration=float(output_info.get("duration") or 0.0),
+            width=int(output_info.get("width") or 0),
+            height=int(output_info.get("height") or 0),
         )
-        
-        progress.complete("Complete")
         result.update_progress("Complete", 100)
-        
-    except Exception as e:
-        result.mark_failed(e)
+
+    except Exception as exc:
+        result.mark_failed(exc)
         raise
-    
+
     return result
 
 

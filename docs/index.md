@@ -7,25 +7,27 @@ Welcome to the Veotools documentation! Veotools is a Python SDK and MCP server f
 - 🎬 **Video Generation** - Generate videos from text prompts, images, or existing videos
 - 🔗 **Seamless Stitching** - Combine videos with automatic overlap trimming
 - 🤖 **MCP Integration** - Built-in Model Context Protocol server for AI assistants
+- 🧠 **Gemini Scene Planning** - Structured multi-clip story plans with character consistency
+- 🛠️ **Plan Execution** - Render planned clips and stitch them into a finished video
 - 📊 **Progress Tracking** - Real-time progress updates for long-running operations
 - 💾 **Smart Caching** - Context caching for improved performance
 - 🛡️ **Safety Controls** - Built-in safety settings pass-through
 
-## Quick Example
+## Quick Start
+
+```bash
+veo plan-run --idea "Retro travel vlog" --execute-model veo-3.0-generate-001 --seed-last-frame
+```
 
 ```python
 import veotools as veo
 
-# Initialize the client
 veo.init()
 
-# Generate a video from text
-result = veo.generate_from_text(
-    "A serene mountain landscape at sunset",
-    model="veo-3.0-fast-generate-preview"
-)
+plan = veo.generate_scene_plan("Retro travel vlog", number_of_scenes=4)
+result = veo.execute_scene_plan(plan, model="veo-3.0-generate-001", auto_seed_last_frame=True)
 
-print(f"Generated: {result.path}")
+print("Final video:", result.final_result.path if result.final_result else "clips only")
 ```
 
 ## Installation

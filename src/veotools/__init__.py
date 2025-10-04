@@ -38,9 +38,19 @@ from .api.mcp_api import (
     cache_list,
     cache_update,
     cache_delete,
+    plan_scenes,
+)
+from .plan import (
+    ScenePlan,
+    CharacterProfile,
+    Clip,
+    SceneWriter,
+    generate_scene_plan,
+    PlanExecutionResult,
+    execute_scene_plan,
 )
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 __all__ = [
     "VeoClient",
@@ -61,6 +71,13 @@ __all__ = [
     "stitch_with_transitions",
     "create_transition_points",
     "Bridge",
+    "ScenePlan",
+    "CharacterProfile",
+    "Clip",
+    "SceneWriter",
+    "generate_scene_plan",
+    "PlanExecutionResult",
+    "execute_scene_plan",
     # MCP-friendly APIs
     "preflight",
     "version",
@@ -73,6 +90,7 @@ __all__ = [
     "cache_list",
     "cache_update",
     "cache_delete",
+    "plan_scenes",
 ]
 
 def init(api_key: str = None, log_level: str = "WARNING"):

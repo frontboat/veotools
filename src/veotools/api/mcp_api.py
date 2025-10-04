@@ -40,6 +40,7 @@ from ..generate.video import (
     generate_from_video,
 )
 from ..core import ModelConfig, VeoClient
+from ..plan.scene_writer import generate_scene_plan
 from google.genai import types
 
 
@@ -757,6 +758,7 @@ __all__ = [
     "cache_list",
     "cache_update",
     "cache_delete",
+    "plan_scenes",
 ]
 
 
@@ -1195,3 +1197,60 @@ def cache_delete(name: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error_code": "UNKNOWN", "error_message": str(e)}
 
+
+def plan_scenes(
+    *,
+    idea: str,
+    number_of_scenes: int = 4,
+    character_description: Optional[str] = None,
+    character_characteristics: Optional[str] = None,
+    video_type: Optional[str] = None,
+    video_characteristics: Optional[str] = None,
+    camera_angle: Optional[str] = None,
+    additional_context: Optional[str] = None,
+    references: Optional[List[Dict[str, Any]]] = None,
+    model: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Generate a structured Gemini-authored scene plan.
+
+    Args:
+        idea: Core concept for the plan.
+        number_of_scenes: Number of clips to request.
+        character_description: Baseline character description passed to Gemini.
+        character_characteristics: Character personality notes.
+        video_type: Label for the production (e.g., vlog, trailer).
+        video_characteristics: Overall stylistic guidance.
+        camera_angle: Primary camera/perspective direction.
+        additional_context: Extra instructions for Gemini.
+        references: Optional list of character reference dicts.
+        model: Gemini model override.
+
+    Returns:
+        dict: Parsed plan payload or error structure.
+    """
+
+    try:
+        kwargs: Dict[str, Any] = {"number_of_scenes": number_of_scenes}
+        if additional_context:
+            kwargs["additional_context"] = additional_context
+        if character_description:
+            kwargs["character_description"] = character_description
+        if character_characteristics:
+            kwargs["character_characteristics"] = character_characteristics
+        if references:
+            kwargs["character_references"] = references
+        if video_type:
+            kwargs["video_type"] = video_type
+        if video_characteristics:
+            kwargs["video_characteristics"] = video_characteristics
+        if camera_angle:
+            kwargs["camera_angle"] = camera_angle
+        if model:
+            kwargs["model"] = model
+
+        plan = generate_scene_plan(idea, **kwargs)
+        return json.loads(plan.model_dump_json())
+    except ValueError as e:
+        return {"error_code": "VALIDATION", "error_message": str(e)}
+    except Exception as e:
+        return {"error_code": "UNKNOWN", "error_message": str(e)}
