@@ -244,19 +244,19 @@ class TestModelConfig:
     def test_get_config(self):
         """Test get_config returns correct model configuration."""
         config = ModelConfig.get_config("veo-3.0-fast-generate-preview")
-        
+
         assert config["name"] == "Veo 3.0 Fast"
-        assert config["supports_duration"] is False
+        assert config["supports_duration"] is True  # Veo 3.0 supports 4, 6, 8 second durations
         assert config["supports_aspect_ratio"] is True
         assert config["default_duration"] == 8
-        
+
     @pytest.mark.unit
     def test_get_config_with_models_prefix(self):
         """Test get_config handles models/ prefix."""
         config = ModelConfig.get_config("models/veo-3.0-fast-generate-preview")
-        
+
         assert config["name"] == "Veo 3.0 Fast"
-        assert config["supports_duration"] is False
+        assert config["supports_duration"] is True  # Veo 3.0 supports 4, 6, 8 second durations
     
     @pytest.mark.unit
     def test_get_config_unknown_model(self):

@@ -26,7 +26,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-  "google-genai>=1.41.0",
+  "google-genai>=1.56.0",
   "opencv-python>=4.8.0",
   "requests>=2.31.0",
   "python-dotenv>=1.0.0",

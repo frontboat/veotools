@@ -7,7 +7,7 @@ A Python toolkit for orchestrating multi-scene videos with Google Veo. Handles s
 ## Features
 - **One-command stories** – Turn ideas into storyboards, render clips, and deliver stitched videos
 - **Gemini planning** – Generate cinematic shot lists with consistent characters and dialogue
-- **Veo rendering** – Full SDK access with Veo 3 defaults and customizable prompts
+- **Veo 3.1 support** – Full SDK access with latest Veo 3.1 features including reference images, video extension, and frame interpolation
 - **Audio-preserving stitching** – FFmpeg pipeline maintains perfect audio alignment
 - **Python-first** – Clean API for programmatic video generation workflows
 
@@ -101,13 +101,53 @@ Run `veo <command> --help` for full flag descriptions.
 | Scene planning | `generate_scene_plan`, `SceneWriter` |
 | Plan execution | `execute_scene_plan`, `PlanExecutionResult` |
 | Single clip generation | `generate_from_text`, `generate_from_image`, `generate_from_video` |
+| Veo 3.1 features | `extend_video`, `generate_with_reference_images`, `generate_with_interpolation` |
 | Media analysis | `extract_frame`, `extract_frames`, `get_video_info` |
 | Stitching | `stitch_videos`, `stitch_with_transitions`, `create_transition_points` |
 | Workflow chaining | `Bridge` (fluent API for multi-step stories) |
 
+### Veo 3.1 features
+
+```python
+from veotools import extend_video, generate_with_reference_images, generate_with_interpolation
+from pathlib import Path
+
+# Extend an existing video (7-second extensions, up to 20x)
+result = extend_video(
+    video_path=Path("input.mp4"),
+    prompt="Continue with a dramatic reveal",
+    model="veo-3.1-generate-preview"
+)
+
+# Generate with reference images for character/scene consistency
+result = generate_with_reference_images(
+    prompt="A character walking through the forest",
+    reference_images=["char_ref.jpg", "forest_ref.jpg"],
+    model="veo-3.1-generate-preview"
+)
+
+# Interpolate between first and last frames
+result = generate_with_interpolation(
+    first_frame=Path("start.jpg"),
+    last_frame=Path("end.jpg"),
+    prompt="Smooth transition showing time passing",
+    model="veo-3.1-generate-preview"
+)
+```
+
 ### Model / safety notes
-- Veo 3 text-to-video clips default to `person_generation="allow_all"`; image/video-seeded clips default to `allow_adult`. Override via keyword arguments if you need a different policy.
-- Use `list_models(include_remote=True)` to discover the Veo variants your account can access (stable IDs: `veo-3.0-generate-001`, `veo-3.0-fast-generate-001`, etc.).
+- Veo 3.x text-to-video clips default to `person_generation="allow_all"`; image/video-seeded clips default to `allow_adult`. Override via keyword arguments if you need a different policy.
+- Use `list_models(include_remote=True)` to discover the Veo variants your account can access (stable IDs: `veo-3.1-generate-001`, `veo-3.0-generate-001`, `veo-3.0-fast-generate-001`, etc.).
+
+### Supported models
+
+| Model | Features |
+|-------|----------|
+| `veo-3.1-generate-preview` | Reference images, video extension, frame interpolation, audio, 1080p |
+| `veo-3.1-fast-generate-preview` | Same as above, optimized for speed |
+| `veo-3.0-generate-001` | Audio, resolution control, seed support |
+| `veo-3.0-fast-generate-001` | Same as above, optimized for speed |
+| `veo-2.0-generate-001` | Duration control, enhance prompt, FPS control |
 
 ### Storage layout
 - `output/videos/` – All rendered clips, stitched deliverables, and intermediate assets.

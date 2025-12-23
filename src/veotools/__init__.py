@@ -10,7 +10,10 @@ from .models import VideoResult, VideoMetadata, Workflow, JobStatus
 from .generate.video import (
     generate_from_text,
     generate_from_image,
-    generate_from_video
+    generate_from_video,
+    extend_video,
+    generate_with_reference_images,
+    generate_with_interpolation,
 )
 
 from .process.extractor import (
@@ -54,16 +57,22 @@ __version__ = "0.1.10"
 
 __all__ = [
     "VeoClient",
-    "StorageManager", 
+    "StorageManager",
     "ProgressTracker",
     "ModelConfig",
     "VideoResult",
     "VideoMetadata",
     "Workflow",
     "JobStatus",
+    # Generation functions
     "generate_from_text",
     "generate_from_image",
     "generate_from_video",
+    # Veo 3.1 features
+    "extend_video",
+    "generate_with_reference_images",
+    "generate_with_interpolation",
+    # Processing
     "extract_frame",
     "extract_frames",
     "get_video_info",
