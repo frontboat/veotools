@@ -284,6 +284,16 @@ class ModelConfig:
     DEFAULT_MODEL = "veo-3.0-fast-generate-preview"
 
     ALIASES = {
+        # Veo 3.1 aliases
+        "veo-3.1": "veo-3.1-generate-preview",
+        "veo-3.1-fast": "veo-3.1-fast-generate-preview",
+        "google/veo-3.1": "veo-3.1-generate-preview",
+        "google/veo-3.1-fast": "veo-3.1-fast-generate-preview",
+        "models/veo-3.1-generate-preview": "veo-3.1-generate-preview",
+        "models/veo-3.1-fast-generate-preview": "veo-3.1-fast-generate-preview",
+        "veo-3.1-generate-001": "veo-3.1-generate-001",
+        "veo-3.1-fast-generate-001": "veo-3.1-fast-generate-001",
+        # Veo 3.0 aliases
         "veo-3": "veo-3.0-generate-preview",
         "veo-3.0": "veo-3.0-generate-preview",
         "google/veo-3": "veo-3.0-generate-preview",
@@ -297,6 +307,12 @@ class ModelConfig:
     }
 
     DAYDREAMS_MODEL_IDS = {
+        # Veo 3.1
+        "veo-3.1-generate-preview": "google/veo-3.1",
+        "veo-3.1-fast-generate-preview": "google/veo-3.1-fast",
+        "veo-3.1-generate-001": "google/veo-3.1",
+        "veo-3.1-fast-generate-001": "google/veo-3.1-fast",
+        # Veo 3.0
         "veo-3.0-generate-preview": "google/veo-3",
         "veo-3.0-fast-generate-preview": "google/veo-3-fast",
         "veo-3.0-generate-001": "google/veo-3",
@@ -304,6 +320,12 @@ class ModelConfig:
     }
 
     DAYDREAMS_SLUGS = {
+        # Veo 3.1
+        "veo-3.1-generate-preview": "veo-3.1",
+        "veo-3.1-generate-001": "veo-3.1",
+        "veo-3.1-fast-generate-preview": "veo-3.1-fast",
+        "veo-3.1-fast-generate-001": "veo-3.1-fast",
+        # Veo 3.0
         "veo-3.0-generate-preview": "veo-3",
         "veo-3.0-generate-001": "veo-3",
         "veo-3.0-fast-generate-preview": "veo-3-fast",
@@ -311,26 +333,153 @@ class ModelConfig:
     }
 
     MODELS = {
-        "veo-3.0-fast-generate-preview": {
-            "name": "Veo 3.0 Fast",
-            "supports_duration": False,
+        # Veo 3.1 models - Latest with reference images, video extension, frame interpolation
+        "veo-3.1-generate-preview": {
+            "name": "Veo 3.1",
+            "supports_duration": True,
             "supports_enhance": False,
             "supports_fps": False,
             "supports_aspect_ratio": True,
             "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": True,
+            "supports_video_extension": True,
+            "supports_last_frame": True,
+            "supports_resize_mode": True,
+            "supports_seed": True,
             "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 120,
+        },
+        "veo-3.1-fast-generate-preview": {
+            "name": "Veo 3.1 Fast",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": True,
+            "supports_video_extension": True,
+            "supports_last_frame": True,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 60,
+        },
+        "veo-3.1-generate-001": {
+            "name": "Veo 3.1 Stable",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": True,
+            "supports_video_extension": True,
+            "supports_last_frame": True,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 120,
+        },
+        "veo-3.1-fast-generate-001": {
+            "name": "Veo 3.1 Fast Stable",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": True,
+            "supports_video_extension": True,
+            "supports_last_frame": True,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 60,
+        },
+        # Veo 3.0 models
+        "veo-3.0-fast-generate-preview": {
+            "name": "Veo 3.0 Fast",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": False,
+            "supports_video_extension": False,
+            "supports_last_frame": False,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
             "generation_time": 60,
         },
         "veo-3.0-generate-preview": {
             "name": "Veo 3.0",
-            "supports_duration": False,
+            "supports_duration": True,
             "supports_enhance": False,
             "supports_fps": False,
             "supports_aspect_ratio": True,
             "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": False,
+            "supports_video_extension": False,
+            "supports_last_frame": False,
+            "supports_resize_mode": True,
+            "supports_seed": True,
             "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
             "generation_time": 120,
         },
+        "veo-3.0-generate-001": {
+            "name": "Veo 3.0 Stable",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": False,
+            "supports_video_extension": False,
+            "supports_last_frame": False,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 120,
+        },
+        "veo-3.0-fast-generate-001": {
+            "name": "Veo 3.0 Fast Stable",
+            "supports_duration": True,
+            "supports_enhance": False,
+            "supports_fps": False,
+            "supports_aspect_ratio": True,
+            "supports_audio": True,
+            "supports_resolution": True,
+            "supports_reference_images": False,
+            "supports_video_extension": False,
+            "supports_last_frame": False,
+            "supports_resize_mode": True,
+            "supports_seed": True,
+            "default_duration": 8,
+            "max_duration": 8,
+            "allowed_durations": [4, 6, 8],
+            "generation_time": 60,
+        },
+        # Veo 2.0 models
         "veo-2.0-generate-001": {
             "name": "Veo 2.0",
             "supports_duration": True,
@@ -338,7 +487,15 @@ class ModelConfig:
             "supports_fps": True,
             "supports_aspect_ratio": True,
             "supports_audio": False,
+            "supports_resolution": False,
+            "supports_reference_images": True,  # Veo 2.0 supports style references
+            "supports_video_extension": True,
+            "supports_last_frame": True,
+            "supports_resize_mode": False,
+            "supports_seed": True,
             "default_duration": 5,
+            "max_duration": 8,
+            "allowed_durations": [5, 6, 7, 8],
             "generation_time": 180,
         },
     }
@@ -374,7 +531,14 @@ class ModelConfig:
 
     @classmethod
     def build_generation_config(cls, model: str, **kwargs) -> types.GenerateVideosConfig:
-        """Build a generation configuration based on model capabilities."""
+        """Build a generation configuration based on model capabilities.
+
+        Supports all Veo 2.0, 3.0, and 3.1 parameters including:
+        - Basic: number_of_videos, duration_seconds, aspect_ratio, negative_prompt
+        - Veo 3.x: resolution, generate_audio, resize_mode, seed
+        - Veo 3.1: reference_images, last_frame (for interpolation)
+        - Person/Safety: person_generation, safety_settings
+        """
 
         normalized = cls.normalize_model(model)
         config = cls.get_config(normalized)
@@ -383,35 +547,105 @@ class ModelConfig:
             "number_of_videos": kwargs.get("number_of_videos", 1),
         }
 
-        if config["supports_duration"] and "duration_seconds" in kwargs:
-            params["duration_seconds"] = kwargs["duration_seconds"]
+        # Duration - validate against allowed durations if specified
+        if config.get("supports_duration") and "duration_seconds" in kwargs:
+            duration = kwargs["duration_seconds"]
+            allowed_durations = config.get("allowed_durations")
+            if allowed_durations and duration not in allowed_durations:
+                raise ValueError(
+                    f"duration_seconds={duration} not allowed for {normalized}. "
+                    f"Allowed: {allowed_durations}"
+                )
+            params["duration_seconds"] = duration
 
-        if config["supports_enhance"]:
+        # Enhance prompt (Veo 2.0 only)
+        if config.get("supports_enhance"):
             params["enhance_prompt"] = kwargs.get("enhance_prompt", False)
 
-        if config["supports_fps"] and "fps" in kwargs:
+        # FPS (Veo 2.0 only)
+        if config.get("supports_fps") and "fps" in kwargs:
             params["fps"] = kwargs["fps"]
 
+        # Aspect ratio
         if config.get("supports_aspect_ratio") and kwargs.get("aspect_ratio"):
             ar = str(kwargs["aspect_ratio"])
-            if normalized.startswith("veo-3.0"):
-                allowed = {"16:9"}
+            # Veo 3.1 and 3.0 support both 16:9 and 9:16
+            if normalized.startswith("veo-3.1") or normalized.startswith("veo-3.0"):
+                allowed = {"16:9", "9:16"}
             elif normalized.startswith("veo-2.0"):
                 allowed = {"16:9", "9:16"}
             else:
-                allowed = {"16:9"}
+                allowed = {"16:9", "9:16"}
             if ar not in allowed:
                 raise ValueError(
                     f"aspect_ratio '{ar}' not supported for model '{normalized}'. Allowed: {sorted(allowed)}"
                 )
             params["aspect_ratio"] = ar
 
+        # Resolution (Veo 3.x only) - 720p or 1080p
+        if config.get("supports_resolution") and kwargs.get("resolution"):
+            resolution = kwargs["resolution"]
+            allowed_resolutions = {"720p", "1080p"}
+            if resolution not in allowed_resolutions:
+                raise ValueError(
+                    f"resolution '{resolution}' not supported. Allowed: {sorted(allowed_resolutions)}"
+                )
+            params["resolution"] = resolution
+
+        # Generate audio (Veo 3.x) - required for Veo 3, unavailable for Veo 2
+        if config.get("supports_audio"):
+            if "generate_audio" in kwargs:
+                params["generate_audio"] = kwargs["generate_audio"]
+            # Note: Veo 3 generates audio by default, so we don't force True
+
+        # Resize mode (Veo 3.x only) - pad or crop for image-to-video
+        if config.get("supports_resize_mode") and kwargs.get("resize_mode"):
+            resize_mode = kwargs["resize_mode"]
+            allowed_modes = {"pad", "crop"}
+            if resize_mode not in allowed_modes:
+                raise ValueError(
+                    f"resize_mode '{resize_mode}' not supported. Allowed: {sorted(allowed_modes)}"
+                )
+            params["resize_mode"] = resize_mode
+
+        # Seed for deterministic generation
+        if config.get("supports_seed") and "seed" in kwargs:
+            seed = kwargs["seed"]
+            if not isinstance(seed, int) or seed < 0 or seed > 4294967295:
+                raise ValueError("seed must be an unsigned 32-bit integer (0-4294967295)")
+            params["seed"] = seed
+
+        # Reference images (Veo 3.1 and Veo 2.0 with style)
+        if config.get("supports_reference_images") and kwargs.get("reference_images"):
+            ref_images = kwargs["reference_images"]
+            if not isinstance(ref_images, list):
+                ref_images = [ref_images]
+            # Veo 3.1: max 3 asset images, Veo 2.0: max 3 asset OR 1 style
+            max_refs = 3
+            if len(ref_images) > max_refs:
+                raise ValueError(f"Maximum {max_refs} reference images allowed")
+            params["reference_images"] = ref_images
+
+        # Last frame for interpolation (Veo 3.1 and Veo 2.0)
+        if config.get("supports_last_frame") and kwargs.get("last_frame"):
+            params["last_frame"] = kwargs["last_frame"]
+
+        # Negative prompt
         if kwargs.get("negative_prompt"):
             params["negative_prompt"] = kwargs["negative_prompt"]
 
+        # Person generation policy
         if kwargs.get("person_generation"):
             params["person_generation"] = kwargs["person_generation"]
 
+        # Compression quality (optimized or lossless)
+        if kwargs.get("compression_quality"):
+            quality = kwargs["compression_quality"]
+            if quality not in {"optimized", "lossless"}:
+                raise ValueError("compression_quality must be 'optimized' or 'lossless'")
+            params["compression_quality"] = quality
+
+        # Safety settings
         safety_settings = kwargs.get("safety_settings")
         if safety_settings:
             normalized_settings: list = []
@@ -431,12 +665,32 @@ class ModelConfig:
             if normalized_settings:
                 params["safety_settings"] = normalized_settings
 
+        # Cached content
         if kwargs.get("cached_content"):
             params["cached_content"] = kwargs["cached_content"]
 
+        # Storage URI for output (GCS bucket)
+        if kwargs.get("storage_uri"):
+            params["storage_uri"] = kwargs["storage_uri"]
+
         try:
             return types.GenerateVideosConfig(**params)
-        except TypeError:
-            for optional_key in ["safety_settings", "cached_content"]:
+        except TypeError as e:
+            # Fallback: remove unsupported parameters for older SDK versions
+            optional_keys = [
+                "safety_settings", "cached_content", "storage_uri",
+                "reference_images", "last_frame", "resolution",
+                "generate_audio", "resize_mode", "seed", "compression_quality"
+            ]
+            for optional_key in optional_keys:
                 params.pop(optional_key, None)
-            return types.GenerateVideosConfig(**params)
+            try:
+                return types.GenerateVideosConfig(**params)
+            except TypeError:
+                # Final fallback with minimal params
+                minimal_params = {
+                    k: v for k, v in params.items()
+                    if k in ["number_of_videos", "duration_seconds", "aspect_ratio",
+                             "negative_prompt", "person_generation", "enhance_prompt"]
+                }
+                return types.GenerateVideosConfig(**minimal_params)
