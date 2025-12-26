@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Veotools Documentation" version="0.1.8">
+<project name="Veotools Documentation" version="0.2.0">
   <description>Python SDK and MCP server for video generation with Google Veo</description>
-  <generated>2025-10-04T17:09:54.058595</generated>
+  <generated>2025-12-25T22:51:41.838041</generated>
   <modules>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/__init__.py">
       <docstring><![CDATA[Veo Tools - A toolkit for AI-powered video generation and stitching.]]></docstring>
-      <function name="init" signature="init(api_key: str, log_level: str)" line="96">
+      <function name="init" signature="init(api_key: str, log_level: str)" line="105">
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/api/__init__.py">
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\bridge.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/api/bridge.py">
       <class name="Bridge" line="9">
         <docstring><![CDATA[A fluent API bridge for chaining video generation and processing operations.
 
@@ -261,7 +261,7 @@ Examples:
         </methods>
       </class>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\api\mcp_api.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/api/mcp_api.py">
       <docstring><![CDATA[MCP-friendly API wrappers for Veo Tools.
 
 This module exposes small, deterministic, JSON-first functions intended for
@@ -936,7 +936,7 @@ Returns:
     dict: Parsed plan payload or error structure.]]></docstring>
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\cli.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/cli.py">
       <docstring><![CDATA[Veotools command-line interface (no extra deps).
 
 Usage examples:
@@ -968,7 +968,7 @@ Usage examples:
       <function name="main" signature="main(argv: Optional[list[str]]) -> int" line="378">
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\core.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/core.py">
       <class name="VeoClient" line="13">
         <docstring><![CDATA[Singleton client for Google GenAI API interactions.
 
@@ -1159,25 +1159,31 @@ Args:
           <method name="get_config" signature="get_config(cls, model: str) -> dict">
           </method>
           <method name="build_generation_config" signature="build_generation_config(cls, model: str) -> types.GenerateVideosConfig">
-            <docstring><![CDATA[Build a generation configuration based on model capabilities.]]></docstring>
+            <docstring><![CDATA[Build a generation configuration based on model capabilities.
+
+Supports all Veo 2.0, 3.0, and 3.1 parameters including:
+- Basic: number_of_videos, duration_seconds, aspect_ratio, negative_prompt
+- Veo 3.x: resolution, generate_audio, resize_mode, seed
+- Veo 3.1: reference_images, last_frame (for interpolation)
+- Person/Safety: person_generation, safety_settings]]></docstring>
           </method>
         </methods>
       </class>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/generate/__init__.py">
       <docstring><![CDATA[Video generation module for Veo Tools.]]></docstring>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\video.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/generate/video.py">
       <docstring><![CDATA[Video generation functions for Veo Tools.]]></docstring>
       <function name="_validate_person_generation" signature="_validate_person_generation(model: str, mode: str, person_generation: Optional[str]) -> None" line="16">
         <docstring><![CDATA[Validate person_generation parameter based on model and generation mode.
 
 Validates the person_generation parameter against the constraints defined for different
-Veo model versions and generation modes. Veo 3.0 and 2.0 have different allowed values
+Veo model versions and generation modes. Veo 3.1, 3.0 and 2.0 have different allowed values
 for text vs image/video generation modes.
 
 Args:
-    model: The model identifier (e.g., "veo-3.0-fast-generate-preview").
+    model: The model identifier (e.g., "veo-3.1-generate-preview").
     mode: Generation mode - "text", "image", or "video" (video treated like image-seeded).
     person_generation: Person generation policy - "allow_all", "allow_adult", or "dont_allow".
 
@@ -1185,36 +1191,38 @@ Raises:
     ValueError: If person_generation value is not allowed for the given model and mode.
 
 Note:
+    - Veo 3.1 text/extension mode: allows "allow_all"
+    - Veo 3.1 image/video/interpolation/reference mode: allows "allow_adult"
     - Veo 3.0 text mode: allows "allow_all"
     - Veo 3.0 image/video mode: allows "allow_adult"
     - Veo 2.0 text mode: allows "allow_all", "allow_adult", "dont_allow"
     - Veo 2.0 image/video mode: allows "allow_adult", "dont_allow"]]></docstring>
       </function>
-      <function name="_apply_default_person_generation" signature="_apply_default_person_generation(model: str, mode: str, config_params: dict) -> None" line="59">
-        <docstring><![CDATA[Populate default person_generation for Veo 3 models when unspecified.]]></docstring>
+      <function name="_apply_default_person_generation" signature="_apply_default_person_generation(model: str, mode: str, config_params: dict) -> None" line="66">
+        <docstring><![CDATA[Populate default person_generation for Veo 3.x models when unspecified.]]></docstring>
       </function>
-      <function name="generate_from_text" signature="generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult" line="76">
+      <function name="generate_from_text" signature="generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult" line="84">
         <docstring><![CDATA[Generate a video from a text prompt.
 
 Automatically selects the active video provider (Google GenAI or Daydreams Router)
 based on configuration. Falls back to Google behaviour when no provider override
 is specified.]]></docstring>
       </function>
-      <function name="_generate_from_text_google" signature="_generate_from_text_google(client, prompt: str) -> VideoResult" line="111">
+      <function name="_generate_from_text_google" signature="_generate_from_text_google(client, prompt: str) -> VideoResult" line="119">
       </function>
-      <function name="_generate_from_text_daydreams" signature="_generate_from_text_daydreams(client, prompt: str) -> VideoResult" line="200">
+      <function name="_generate_from_text_daydreams" signature="_generate_from_text_daydreams(client, prompt: str) -> VideoResult" line="208">
       </function>
-      <function name="generate_from_image" signature="generate_from_image(image_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="374">
+      <function name="generate_from_image" signature="generate_from_image(image_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="382">
         <docstring><![CDATA[Generate a video from an image seed.]]></docstring>
       </function>
-      <function name="_generate_from_image_google" signature="_generate_from_image_google(client, image_path: Path, prompt: str) -> VideoResult" line="399">
+      <function name="_generate_from_image_google" signature="_generate_from_image_google(client, image_path: Path, prompt: str) -> VideoResult" line="407">
       </function>
-      <function name="generate_from_video" signature="generate_from_video(video_path: Path, prompt: str, extract_at: float, model: str, on_progress: Optional[Callable]) -> VideoResult" line="498">
+      <function name="generate_from_video" signature="generate_from_video(video_path: Path, prompt: str, extract_at: float, model: str, on_progress: Optional[Callable]) -> VideoResult" line="506">
         <docstring><![CDATA[Generate a video continuation from an existing clip.]]></docstring>
       </function>
-      <function name="_generate_from_video_google" signature="_generate_from_video_google(client, video_path: Path, prompt: str) -> VideoResult" line="525">
+      <function name="_generate_from_video_google" signature="_generate_from_video_google(client, video_path: Path, prompt: str) -> VideoResult" line="533">
       </function>
-      <function name="_download_video" signature="_download_video(video: types.Video, output_path: Path, client) -> Path" line="626">
+      <function name="_download_video" signature="_download_video(video: types.Video, output_path: Path, client) -> Path" line="634">
         <docstring><![CDATA[Download a generated video from Google's API to local storage.
 
 Downloads video content from either a URI or direct data blob provided by the
@@ -1238,8 +1246,98 @@ Note:
     This function requires the GEMINI_API_KEY environment variable to be set
     for URI-based downloads.]]></docstring>
       </function>
+      <function name="extend_video" signature="extend_video(video_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="683">
+        <docstring><![CDATA[Extend an existing video using Veo 3.1's video extension feature.
+
+Creates a 7-second extension that connects to the end of the input video,
+maintaining visual continuity. Can extend videos up to 20 times.
+
+Args:
+    video_path: Path to the existing video to extend (MP4, 1-30 sec, 24fps, 720p/1080p).
+    prompt: Text description guiding the extension content.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - person_generation: Person generation policy
+        - negative_prompt: Content to avoid
+
+Returns:
+    VideoResult: Result object containing the extended video.
+
+Raises:
+    ValueError: If model doesn't support video extension.
+    RuntimeError: If video extension fails.
+
+Note:
+    - Only Veo 3.1 and Veo 2.0 support video extension
+    - Input video must be: MP4, 1-30 seconds, 24 fps, 720p or 1080p
+    - Output is a 7-second extension at 720p, 24fps]]></docstring>
+      </function>
+      <function name="generate_with_reference_images" signature="generate_with_reference_images(prompt: str, reference_images: list, model: str, on_progress: Optional[Callable]) -> VideoResult" line="806">
+        <docstring><![CDATA[Generate a video using reference images for content guidance.
+
+Use reference images to guide character consistency, scene elements,
+or apply specific visual styles across the generated video.
+
+Args:
+    prompt: Text description of the video to generate.
+    reference_images: List of up to 3 Image objects or file paths for guidance.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - duration_seconds: 4, 6, or 8 seconds
+        - negative_prompt: Content to avoid
+        - seed: For deterministic generation
+
+Returns:
+    VideoResult: Result object containing the generated video.
+
+Raises:
+    ValueError: If model doesn't support reference images or too many provided.
+    RuntimeError: If video generation fails.
+
+Note:
+    - Veo 3.1: Up to 3 asset reference images
+    - Veo 2.0: Up to 3 asset images OR 1 style image
+    - Reference images help maintain character/scene consistency]]></docstring>
+      </function>
+      <function name="generate_with_interpolation" signature="generate_with_interpolation(first_frame: Path, last_frame: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult" line="941">
+        <docstring><![CDATA[Generate a video that smoothly transitions between two frames.
+
+Creates a video that starts with the first frame and ends with the last frame,
+generating smooth interpolated content between them based on the prompt.
+
+Args:
+    first_frame: Path to the starting frame image.
+    last_frame: Path to the ending frame image.
+    prompt: Text description guiding the interpolation content.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - duration_seconds: 4, 6, or 8 seconds
+        - negative_prompt: Content to avoid
+        - seed: For deterministic generation
+
+Returns:
+    VideoResult: Result object containing the interpolated video.
+
+Raises:
+    ValueError: If model doesn't support frame interpolation.
+    RuntimeError: If video generation fails.
+
+Note:
+    - Supported by Veo 3.1 and Veo 2.0
+    - Generates smooth transitions with matching audio (Veo 3.1)
+    - Great for scene transitions and visual morphing effects]]></docstring>
+      </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\models.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/models.py">
       <class name="JobStatus" line="7">
         <docstring><![CDATA[Enumeration of possible job statuses for video generation tasks.
 
@@ -1426,10 +1524,10 @@ Examples:
         </methods>
       </class>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/plan/__init__.py">
       <docstring><![CDATA[Planning utilities for structuring Veo video workflows.]]></docstring>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\executor.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/plan/executor.py">
       <docstring><![CDATA[Execute scene plans into rendered videos.]]></docstring>
       <class name="PlanExecutionResult" line="23">
         <docstring><![CDATA[Container for executing a :class:`ScenePlan`.
@@ -1471,7 +1569,7 @@ Returns:
     PlanExecutionResult containing individual clip results and optional final video.]]></docstring>
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\scene_writer.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/plan/scene_writer.py">
       <docstring><![CDATA[Scene planning helpers powered by Gemini.]]></docstring>
       <class name="Shot" line="16">
         <docstring><![CDATA[Technical camera details for a specific clip.]]></docstring>
@@ -1555,10 +1653,10 @@ Returns:
         <docstring><![CDATA[Convenience wrapper around :class:`SceneWriter` for one-off calls.]]></docstring>
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\process\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/process/__init__.py">
       <docstring><![CDATA[Video processing module for Veo Tools.]]></docstring>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\process\extractor.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/process/extractor.py">
       <docstring><![CDATA[Frame extraction and video info utilities for Veo Tools.
 
 Enhancements:
@@ -1687,10 +1785,10 @@ Note:
     - Returns 0.0 for fps/duration if video properties cannot be determined]]></docstring>
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/providers/__init__.py">
       <docstring><![CDATA[Provider integration helpers for Veotools.]]></docstring>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\daydreams.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/providers/daydreams.py">
       <docstring><![CDATA[Daydreams Router API client helpers.]]></docstring>
       <class name="DaydreamsRouterClient" line="17">
         <docstring><![CDATA[Lightweight wrapper around the Daydreams Router REST API.]]></docstring>
@@ -1714,9 +1812,9 @@ Note:
         </methods>
       </class>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\server\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/server/__init__.py">
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\server\mcp_server.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/server/mcp_server.py">
       <docstring><![CDATA[Built-in MCP server entry point for Veotools.
 
 Run:
@@ -1786,10 +1884,10 @@ Returns array of {path, url, metadata, modified}.]]></docstring>
       <function name="main" signature="main() -> None" line="316">
       </function>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\__init__.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/stitch/__init__.py">
       <docstring><![CDATA[Video stitching module for Veo Tools.]]></docstring>
     </module>
-    <module path="C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\seamless.py">
+    <module path="/Users/boat/Projects/veotools-PR2/src/veotools/stitch/seamless.py">
       <docstring><![CDATA[Seamless video stitching for Veo Tools.]]></docstring>
       <function name="_has_audio" signature="_has_audio(video_path: Path) -> bool" line="15">
         <docstring><![CDATA[Return True if the media file contains an audio stream.]]></docstring>

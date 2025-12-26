@@ -1,8 +1,8 @@
 # Veotools Documentation - LLM Documentation
 
-Generated: 2025-10-04T17:09:54.058595
+Generated: 2025-12-25T22:51:41.837875
 
-Version: 0.1.8
+Version: 0.2.0
 
 Python SDK and MCP server for video generation with Google Veo
 
@@ -32,7 +32,7 @@ Python SDK and MCP server for video generation with Google Veo
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/__init__.py`
 
 Veo Tools - A toolkit for AI-powered video generation and stitching.
 
@@ -43,12 +43,12 @@ Veo Tools - A toolkit for AI-powered video generation and stitching.
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/api/__init__.py`
 
 
 ## bridge
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\bridge.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/api/bridge.py`
 
 ### Classes
 
@@ -112,7 +112,7 @@ Examples:
 
 ## mcp_api
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\api\mcp_api.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/api/mcp_api.py`
 
 MCP-friendly API wrappers for Veo Tools.
 
@@ -766,7 +766,7 @@ Returns:
 
 ## cli
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\cli.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/cli.py`
 
 Veotools command-line interface (no extra deps).
 
@@ -805,7 +805,7 @@ Load character reference JSON blobs from disk.
 
 ## core
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\core.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/core.py`
 
 ### Classes
 
@@ -909,14 +909,14 @@ Configuration and capabilities for different Veo video generation models.
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/generate/__init__.py`
 
 Video generation module for Veo Tools.
 
 
 ## video
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\generate\video.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/generate/video.py`
 
 Video generation functions for Veo Tools.
 
@@ -927,11 +927,11 @@ Video generation functions for Veo Tools.
 Validate person_generation parameter based on model and generation mode.
 
 Validates the person_generation parameter against the constraints defined for different
-Veo model versions and generation modes. Veo 3.0 and 2.0 have different allowed values
+Veo model versions and generation modes. Veo 3.1, 3.0 and 2.0 have different allowed values
 for text vs image/video generation modes.
 
 Args:
-    model: The model identifier (e.g., "veo-3.0-fast-generate-preview").
+    model: The model identifier (e.g., "veo-3.1-generate-preview").
     mode: Generation mode - "text", "image", or "video" (video treated like image-seeded).
     person_generation: Person generation policy - "allow_all", "allow_adult", or "dont_allow".
 
@@ -939,6 +939,8 @@ Raises:
     ValueError: If person_generation value is not allowed for the given model and mode.
 
 Note:
+    - Veo 3.1 text/extension mode: allows "allow_all"
+    - Veo 3.1 image/video/interpolation/reference mode: allows "allow_adult"
     - Veo 3.0 text mode: allows "allow_all"
     - Veo 3.0 image/video mode: allows "allow_adult"
     - Veo 2.0 text mode: allows "allow_all", "allow_adult", "dont_allow"
@@ -946,7 +948,7 @@ Note:
 
 #### `_apply_default_person_generation(model: str, mode: str, config_params: dict) -> None`
 
-Populate default person_generation for Veo 3 models when unspecified.
+Populate default person_generation for Veo 3.x models when unspecified.
 
 #### `generate_from_text(prompt: str, model: str, duration_seconds: Optional[int], on_progress: Optional[Callable]) -> VideoResult`
 
@@ -997,10 +999,103 @@ Note:
     This function requires the GEMINI_API_KEY environment variable to be set
     for URI-based downloads.
 
+#### `extend_video(video_path: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult`
+
+Extend an existing video using Veo 3.1's video extension feature.
+
+Creates a 7-second extension that connects to the end of the input video,
+maintaining visual continuity. Can extend videos up to 20 times.
+
+Args:
+    video_path: Path to the existing video to extend (MP4, 1-30 sec, 24fps, 720p/1080p).
+    prompt: Text description guiding the extension content.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - person_generation: Person generation policy
+        - negative_prompt: Content to avoid
+
+Returns:
+    VideoResult: Result object containing the extended video.
+
+Raises:
+    ValueError: If model doesn't support video extension.
+    RuntimeError: If video extension fails.
+
+Note:
+    - Only Veo 3.1 and Veo 2.0 support video extension
+    - Input video must be: MP4, 1-30 seconds, 24 fps, 720p or 1080p
+    - Output is a 7-second extension at 720p, 24fps
+
+#### `generate_with_reference_images(prompt: str, reference_images: list, model: str, on_progress: Optional[Callable]) -> VideoResult`
+
+Generate a video using reference images for content guidance.
+
+Use reference images to guide character consistency, scene elements,
+or apply specific visual styles across the generated video.
+
+Args:
+    prompt: Text description of the video to generate.
+    reference_images: List of up to 3 Image objects or file paths for guidance.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - duration_seconds: 4, 6, or 8 seconds
+        - negative_prompt: Content to avoid
+        - seed: For deterministic generation
+
+Returns:
+    VideoResult: Result object containing the generated video.
+
+Raises:
+    ValueError: If model doesn't support reference images or too many provided.
+    RuntimeError: If video generation fails.
+
+Note:
+    - Veo 3.1: Up to 3 asset reference images
+    - Veo 2.0: Up to 3 asset images OR 1 style image
+    - Reference images help maintain character/scene consistency
+
+#### `generate_with_interpolation(first_frame: Path, last_frame: Path, prompt: str, model: str, on_progress: Optional[Callable]) -> VideoResult`
+
+Generate a video that smoothly transitions between two frames.
+
+Creates a video that starts with the first frame and ends with the last frame,
+generating smooth interpolated content between them based on the prompt.
+
+Args:
+    first_frame: Path to the starting frame image.
+    last_frame: Path to the ending frame image.
+    prompt: Text description guiding the interpolation content.
+    model: Model to use (default: "veo-3.1-generate-preview").
+    on_progress: Optional progress callback function.
+    **kwargs: Additional configuration options:
+        - aspect_ratio: "16:9" or "9:16"
+        - resolution: "720p" or "1080p"
+        - duration_seconds: 4, 6, or 8 seconds
+        - negative_prompt: Content to avoid
+        - seed: For deterministic generation
+
+Returns:
+    VideoResult: Result object containing the interpolated video.
+
+Raises:
+    ValueError: If model doesn't support frame interpolation.
+    RuntimeError: If video generation fails.
+
+Note:
+    - Supported by Veo 3.1 and Veo 2.0
+    - Generates smooth transitions with matching audio (Veo 3.1)
+    - Great for scene transitions and visual morphing effects
+
 
 ## models
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\models.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/models.py`
 
 ### Classes
 
@@ -1134,14 +1229,14 @@ Examples:
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/plan/__init__.py`
 
 Planning utilities for structuring Veo video workflows.
 
 
 ## executor
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\executor.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/plan/executor.py`
 
 Execute scene plans into rendered videos.
 
@@ -1194,7 +1289,7 @@ Returns:
 
 ## scene_writer
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\plan\scene_writer.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/plan/scene_writer.py`
 
 Scene planning helpers powered by Gemini.
 
@@ -1286,14 +1381,14 @@ Convenience wrapper around :class:`SceneWriter` for one-off calls.
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\process\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/process/__init__.py`
 
 Video processing module for Veo Tools.
 
 
 ## extractor
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\process\extractor.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/process/extractor.py`
 
 Frame extraction and video info utilities for Veo Tools.
 
@@ -1431,14 +1526,14 @@ Note:
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/providers/__init__.py`
 
 Provider integration helpers for Veotools.
 
 
 ## daydreams
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\providers\daydreams.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/providers/daydreams.py`
 
 Daydreams Router API client helpers.
 
@@ -1463,12 +1558,12 @@ Lightweight wrapper around the Daydreams Router REST API.
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\server\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/server/__init__.py`
 
 
 ## mcp_server
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\server\mcp_server.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/server/mcp_server.py`
 
 Built-in MCP server entry point for Veotools.
 
@@ -1557,14 +1652,14 @@ Retrieve the persisted job record by id.
 
 ## __init__
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\__init__.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/stitch/__init__.py`
 
 Video stitching module for Veo Tools.
 
 
 ## seamless
 
-`C:\Users\SwordSaint\Projects\veotools\src\veotools\stitch\seamless.py`
+`/Users/boat/Projects/veotools-PR2/src/veotools/stitch/seamless.py`
 
 Seamless video stitching for Veo Tools.
 
