@@ -10,6 +10,10 @@ from veotools.generate.video import _apply_default_person_generation
 @pytest.mark.parametrize(
     "model, mode, expected",
     [
+        ("veo-3.1-generate-preview", "text", "allow_all"),
+        ("models/veo-3.1-generate-preview", "text", "allow_all"),
+        ("veo-3.1-generate-preview", "image", "allow_adult"),
+        ("veo-3.1-fast-generate-preview", "video", "allow_adult"),
         ("veo-3.0-generate-001", "text", "allow_all"),
         ("models/veo-3.0-generate-001", "text", "allow_all"),
         ("veo-3.0-generate-001", "image", "allow_adult"),

@@ -29,8 +29,8 @@ def _validate_person_generation(model: str, mode: str, person_generation: Option
         ValueError: If person_generation value is not allowed for the given model and mode.
 
     Note:
-        - Veo 3.1 text mode: allows "allow_all", "allow_adult"
-        - Veo 3.1 image/video mode: allows "allow_adult"
+        - Veo 3.1 text/extension mode: allows "allow_all"
+        - Veo 3.1 image/video/interpolation/reference mode: allows "allow_adult"
         - Veo 3.0 text mode: allows "allow_all"
         - Veo 3.0 image/video mode: allows "allow_adult"
         - Veo 2.0 text mode: allows "allow_all", "allow_adult", "dont_allow"
@@ -41,7 +41,7 @@ def _validate_person_generation(model: str, mode: str, person_generation: Option
     model_key = model.replace("models/", "") if model else ""
     if model_key.startswith("veo-3.1"):
         if mode == "text":
-            allowed = {"allow_all", "allow_adult"}
+            allowed = {"allow_all"}
         else:  # image or video
             allowed = {"allow_adult"}
     elif model_key.startswith("veo-3.0"):
@@ -56,7 +56,7 @@ def _validate_person_generation(model: str, mode: str, person_generation: Option
             allowed = {"allow_adult", "dont_allow"}
     else:
         # Default to Veo 3.1 constraints if unknown
-        allowed = {"allow_all", "allow_adult"} if mode == "text" else {"allow_adult"}
+        allowed = {"allow_all"} if mode == "text" else {"allow_adult"}
     if person_generation not in allowed:
         raise ValueError(
             f"person_generation='{person_generation}' not allowed for {model_key or 'veo-3.1'} in {mode} mode. Allowed: {sorted(allowed)}"
@@ -557,8 +557,8 @@ def _generate_from_video_google(
         image = types.Image.from_file(location=str(frame_path))
 
         config_params = kwargs.copy()
-        _apply_default_person_generation(sdk_model, "video", config_params)
-        _validate_person_generation(sdk_model, "video", config_params.get("person_generation"))
+        _apply_default_person_generation(sdk_model, "text", config_params)
+        _validate_person_generation(sdk_model, "text", config_params.get("person_generation"))
 
         config = ModelConfig.build_generation_config(normalized_model, **config_params)
 
@@ -743,8 +743,8 @@ def extend_video(
         video_input = types.Video.from_file(location=str(video_path))
 
         config_params = kwargs.copy()
-        _apply_default_person_generation(sdk_model, "video", config_params)
-        _validate_person_generation(sdk_model, "video", config_params.get("person_generation"))
+        _apply_default_person_generation(sdk_model, "text", config_params)
+        _validate_person_generation(sdk_model, "text", config_params.get("person_generation"))
 
         config = ModelConfig.build_generation_config(normalized_model, **config_params)
 
@@ -877,8 +877,8 @@ def generate_with_reference_images(
         config_params = kwargs.copy()
         config_params["reference_images"] = ref_images
 
-        _apply_default_person_generation(sdk_model, "text", config_params)
-        _validate_person_generation(sdk_model, "text", config_params.get("person_generation"))
+        _apply_default_person_generation(sdk_model, "image", config_params)
+        _validate_person_generation(sdk_model, "image", config_params.get("person_generation"))
 
         config = ModelConfig.build_generation_config(normalized_model, **config_params)
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "veotools"
-version = "0.1.10"
+version = "0.2.0"
 description = "A Python toolkit for AI-powered video generation and seamless stitching using Google's Veo models."
 readme = "readme.md"
 requires-python = ">=3.10"
@@ -53,7 +53,7 @@ include = [
 allow-direct-references = true
 
 [project.optional-dependencies]
-mcp = ["mcp[cli]>=1.0.0"]
+mcp = ["mcp[cli]>=1.25.0"]
 dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
