@@ -10,6 +10,7 @@
 - `make test`, `make test-unit`, `make test-integration` run the pytest suite with relevant markers; default output is uncaptured for easier debugging.
 - `make format`, `make lint`, and `make typecheck` invoke Black, Ruff, and mypy; run all three before sending reviews.
 - `make docs-serve` previews MkDocs locally; `python scripts/generate_llm_docs.py --format md --output llm.txt` refreshes LLM-facing docs when APIs change.
+- `mkdocs gh-deploy` publishes the docs site to the `gh-pages` branch (GitHub Pages root).
 
 ## Coding Style & Naming Conventions
 - Use 4-space indentation and Black defaults; do not hand-tune formatting—rerun `make format` instead.

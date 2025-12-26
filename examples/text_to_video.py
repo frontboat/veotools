@@ -10,7 +10,7 @@ import veotools as veo
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a Veo clip from text")
     parser.add_argument("prompt", help="Text prompt for the clip")
-    parser.add_argument("--model", default="veo-3.0-generate-001", help="Veo model to use")
+    parser.add_argument("--model", default="veo-3.1-generate-preview", help="Veo model to use")
     args = parser.parse_args()
 
     veo.init()

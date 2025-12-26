@@ -36,7 +36,7 @@ Set `VEO_PROVIDER=daydreams` to proxy prompts and video jobs through the Daydrea
 veo plan-run \
   --idea "N64 Japanese retro explainer about the x402 protocol" \
   --save-plan output-plans/x402.json \
-  --execute-model veo-3.0-generate-001 \
+  --execute-model veo-3.1-generate-preview \
   --seed-last-frame --seed-offset -0.25
 ```
 
@@ -48,7 +48,7 @@ Outputs land under `output/`:
 You can also execute an existing plan:
 
 ```bash
-veo plan-execute --plan output-plans/x402.json --model veo-3.0-generate-001 --seed-last-frame
+veo plan-execute --plan output-plans/x402.json --model veo-3.1-generate-preview --seed-last-frame
 ```
 
 …and generate only the storyboard:
@@ -72,7 +72,7 @@ plan = veo.generate_scene_plan(
 
 result = veo.execute_scene_plan(
     plan,
-    model="veo-3.0-generate-001",
+    model="veo-3.1-generate-preview",
     auto_seed_last_frame=True,        # feed each clip the previous clip's final frame
     seed_frame_offset=-0.25,          # extract the seed frame 0.25s before the end
 )
@@ -136,8 +136,9 @@ result = generate_with_interpolation(
 ```
 
 ### Model / safety notes
-- Veo 3.x text-to-video clips default to `person_generation="allow_all"`; image/video-seeded clips default to `allow_adult`. Override via keyword arguments if you need a different policy.
-- Use `list_models(include_remote=True)` to discover the Veo variants your account can access (stable IDs: `veo-3.1-generate-001`, `veo-3.0-generate-001`, `veo-3.0-fast-generate-001`, etc.).
+- Veo 3.1 text/extension defaults to `person_generation="allow_all"`; image/interpolation/reference defaults to `allow_adult`.
+- Veo 3.0 text defaults to `allow_all`; image/video-seeded defaults to `allow_adult`.
+- Use `list_models(include_remote=True)` to discover the Veo variants your account can access (stable IDs: `veo-3.1-generate-001`, `veo-3.1-fast-generate-001`, `veo-3.0-generate-001`, etc.).
 
 ### Supported models
 
@@ -145,6 +146,8 @@ result = generate_with_interpolation(
 |-------|----------|
 | `veo-3.1-generate-preview` | Reference images, video extension, frame interpolation, audio, 1080p |
 | `veo-3.1-fast-generate-preview` | Same as above, optimized for speed |
+| `veo-3.1-generate-001` | Reference images, video extension, frame interpolation, audio, 1080p |
+| `veo-3.1-fast-generate-001` | Same as above, optimized for speed |
 | `veo-3.0-generate-001` | Audio, resolution control, seed support |
 | `veo-3.0-fast-generate-001` | Same as above, optimized for speed |
 | `veo-2.0-generate-001` | Duration control, enhance prompt, FPS control |

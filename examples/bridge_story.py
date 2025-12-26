@@ -13,7 +13,7 @@ def progress(message: str, percent: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Bridge workflow example")
-    parser.add_argument("--model", default="veo-3.0-generate-001", help="Veo model to use")
+    parser.add_argument("--model", default="veo-3.1-generate-preview", help="Veo model to use")
     parser.add_argument("--overlap", type=float, default=1.0, help="Overlap trim when stitching")
     args = parser.parse_args()
 

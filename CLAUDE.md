@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Veotools is a Python SDK and MCP server for generating and extending videos with Google Veo. It provides:
 - Video generation from text, image seed, or continuation from existing video
+- Veo 3.1 helpers for reference images, interpolation, and video extension
 - Seamless video stitching with overlap trimming
 - MCP (Model Context Protocol) server integration for AI assistants
 - Progress tracking and caching support
@@ -113,6 +114,7 @@ src/veotools/
 ### Model Constraints
 
 Person generation varies by Veo model and mode:
+- **Veo 3.1**: text/extension allows `allow_all`; image/interpolation/reference allows `allow_adult`
 - **Veo 3.0**: text→video allows `allow_all`; image/video-seeded allows `allow_adult`
 - **Veo 2.0**: text→video allows `allow_all`, `allow_adult`, `dont_allow`; image/video-seeded allows `allow_adult`, `dont_allow`
 
@@ -141,10 +143,10 @@ Person generation varies by Veo model and mode:
 ### Dependencies
 
 Core dependencies managed in `pyproject.toml`:
-- `google-genai>=1.41.0` - Google's generative AI client
+- `google-genai>=1.56.0` - Google's generative AI client
 - `opencv-python>=4.8.0` - Video processing
 - `python-dotenv>=1.0.0` - Environment configuration
-- `mcp[cli]>=1.0.0` (optional) - MCP server support
+- `mcp[cli]>=1.25.0` (optional) - MCP server support
 
 Development dependencies:
 - `pytest>=7.4.0` - Testing framework

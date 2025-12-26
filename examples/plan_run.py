@@ -13,7 +13,7 @@ def main() -> None:
     parser.add_argument("idea", help="High-level concept for the story")
     parser.add_argument("--scenes", type=int, default=4, help="Number of clips (default 4)")
     parser.add_argument("--plan-model", default="gemini-2.5-pro", help="Gemini model for planning")
-    parser.add_argument("--execute-model", default="veo-3.0-generate-001", help="Veo model for rendering")
+    parser.add_argument("--execute-model", default="veo-3.1-generate-preview", help="Veo model for rendering")
     parser.add_argument("--save-plan", default="output-plans/example_plan.json", help="Path to save the storyboard JSON")
     parser.add_argument("--seed-last-frame", action="store_true", help="Use previous clip's final frame as the next seed image")
     args = parser.parse_args()
